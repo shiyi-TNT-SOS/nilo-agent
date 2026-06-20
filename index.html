@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>霓洛 · 数字人口播智能体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #050508;
+  --deep: #09090F;
+  --surface: #0F0F1A;
+  --lift: #161625;
+  --rim: #222238;
+  --rim2: #2E2E50;
+  --gold: #C8A96E;
+  --gold-hi: #E2C68A;
+  --gold-lo: rgba(200,169,110,0.15);
+  --gold-glow: rgba(200,169,110,0.08);
+  --indigo: #6366F1;
+  --indigo-hi: #818CF8;
+  --indigo-lo: rgba(99,102,241,0.12);
+  --text: #E8E8F2;
+  --text2: #8888AA;
+  --text3: #44445A;
+  --ok: #34D399;
+  --warn: #FBBF24;
+  --err: #F87171;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { height: 100%; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ── AMBIENT LIGHT ── */
+.ambient {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+.ambient-1 {
+  top: -300px; left: 50%;
+  transform: translateX(-50%);
+  width: 1000px; height: 600px;
+  background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 65%);
+}
+.ambient-2 {
+  bottom: -200px; right: -100px;
+  width: 600px; height: 600px;
+  background: radial-gradient(ellipse, rgba(200,169,110,0.05) 0%, transparent 65%);
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--rim);
+  background: rgba(5,5,8,0.9);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+.brand-name em {
+  font-style: normal;
+  color: var(--text3);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border: 1px solid var(--rim);
+  border-radius: 100px;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.pulse-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  animation: pulse 2.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.3; transform:scale(0.8); }
+}
+
+.version-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+/* ── LAYOUT ── */
+.workspace {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL ── */
+.left-panel {
+  width: 380px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--rim);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+.panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 24px;
+}
+
+.panel-scroll::-webkit-scrollbar { width: 3px; }
+.panel-scroll::-webkit-scrollbar-thumb { background: var(--rim2); border-radius: 2px; }
+
+/* 区块标签 */
+.field-group {
+  margin-bottom: 28px;
+}
+
+.field-label {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rim);
+}
+
+/* API Key */
+.key-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.key-row:focus-within {
+  border-color: rgba(200,169,110,0.4);
+}
+
+.key-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.key-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+}
+
+.key-input::placeholder { color: var(--text3); }
+
+/* 主题输入 */
+.topic-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: 'Noto Sans SC', 'DM Sans', sans-serif;
+  color: var(--text);
+  outline: none;
+  resize: none;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 72px;
+}
+
+.topic-input:focus {
+  border-color: rgba(99,102,241,0.5);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.06);
+}
+
+.topic-input::placeholder { color: var(--text3); }
+
+/* 快选胶囊 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chip {
+  padding: 4px 11px;
+  background: transparent;
+  border: 1px solid var(--rim);
+  border-radius: 100px;
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: 'Noto Sans SC', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+
+/* 配置网格 */
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.config-item label {
+  display: block;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.config-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.config-select:focus { border-color: var(--indigo); }
+
+/* ── RUN BUTTON ── */
+.btn-run {
+  margin: 0 24px 24px;
+  width: calc(100% - 48px);
+  padding: 14px;
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #818CF8 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-run::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+}
+
+.btn-run:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(99,102,241,0.35);
+}
+
+.btn-run:active { transform: translateY(0); }
+
+.btn-run:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-icon { font-size: 15px; }
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── AGENT TIMELINE ── */
+.timeline-bar {
+  flex-shrink: 0;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--rim);
+  background: var(--deep);
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.tl-step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.tl-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.tl-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--rim2);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.4s;
+  position: relative;
+}
+
+.tl-circle.active {
+  border-color: var(--indigo);
+  background: var(--indigo-lo);
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+}
+
+.tl-circle.done {
+  border-color: var(--gold);
+  background: var(--gold-lo);
+  box-shadow: 0 0 0 4px var(--gold-glow);
+}
+
+/* 流光动画 */
+.tl-circle.active::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--indigo);
+  animation: ring-pulse 1.5s ease infinite;
+}
+
+@keyframes ring-pulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.tl-label {
+  font-size: 10px;
+  color: var(--text3);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.tl-label.active { color: var(--indigo-hi); }
+.tl-label.done { color: var(--gold); }
+
+.tl-line {
+  flex: 1;
+  height: 1px;
+  background: var(--rim);
+  margin: 0 6px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tl-line-fill {
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--indigo), var(--gold));
+  transition: width 0.6s ease;
+}
+
+/* ── OUTPUT AREA ── */
+.output-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.output-area::-webkit-scrollbar { width: 3px; }
+.output-area::-webkit-scrollbar-thumb { background: var(--rim2); border-radius: 2px; }
+
+/* 空状态 */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  opacity: 0.4;
+}
+
+.empty-glyph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 80px;
+  font-weight: 300;
+  color: var(--gold);
+  line-height: 1;
+  letter-spacing: -4px;
+}
+
+.empty-text {
+  font-size: 13px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* 进度卡 */
+.progress-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  overflow: hidden;
+  display: none;
+}
+
+.progress-card.visible { display: block; }
+
+.progress-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progress-card-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.5px;
+}
+
+.progress-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--gold);
+}
+
+.progress-track {
+  height: 2px;
+  background: var(--rim);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--indigo), var(--gold));
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.agent-rows {
+  padding: 8px 0;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  transition: background 0.2s;
+}
+
+.agent-row.running { background: rgba(99,102,241,0.04); }
+.agent-row.done { background: rgba(200,169,110,0.03); }
+
+.agent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rim2);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.agent-row.running .agent-dot {
+  background: var(--indigo);
+  box-shadow: 0 0 6px var(--indigo);
+  animation: pulse 1s infinite;
+}
+
+.agent-row.done .agent-dot {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(200,169,110,0.5);
+}
+
+.agent-row.error .agent-dot { background: var(--err); }
+
+.agent-row-name {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text3);
+  transition: color 0.2s;
+}
+
+.agent-row.running .agent-row-name { color: var(--text2); }
+.agent-row.done .agent-row-name { color: var(--text2); }
+
+.agent-row-status {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+  transition: color 0.2s;
+}
+
+.agent-row.running .agent-row-status { color: var(--indigo-hi); }
+.agent-row.done .agent-row-status { color: var(--gold); }
+
+/* 输出卡 */
+.out-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  overflow: hidden;
+  display: none;
+  animation: fadeUp 0.4s ease;
+}
+
+.out-card.visible { display: block; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.out-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.out-card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.out-card-label-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.out-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sm {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid var(--rim);
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-sm:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.out-card-body { padding: 20px; }
+
+/* 脚本段落 */
+.script-block {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--lift);
+  border-radius: 8px;
+  border-left: 2px solid var(--indigo);
+}
+
+.script-block:last-child { margin-bottom: 0; }
+
+.script-block-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--indigo-hi);
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.script-block-text {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+/* 发布内容 */
+.publish-text {
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text2);
+  white-space: pre-wrap;
+  font-family: 'Noto Sans SC', 'DM Sans', sans-serif;
+}
+
+/* streaming cursor */
+.stream-cursor {
+  display: inline-block;
+  width: 1.5px;
+  height: 1em;
+  background: var(--indigo-hi);
+  vertical-align: text-bottom;
+  animation: blink 0.7s step-end infinite;
+  margin-left: 1px;
+}
+
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50% { opacity:0; }
+}
+
+/* toast */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 10px 20px;
+  background: var(--lift);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.25s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* divider */
+.divider {
+  height: 1px;
+  background: var(--rim);
+  margin: 4px 24px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .workspace { flex-direction: column; overflow: visible; }
+  .left-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--rim); }
+  .panel-scroll { overflow: visible; }
+  .right-panel { overflow: visible; }
+  .output-area { overflow: visible; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">霓洛 Nilo <em>Agent</em></span>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="pulse-dot"></div>
+      <span>2 agents online</span>
+    </div>
+    <span class="version-tag">v0.1-beta</span>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- LEFT PANEL -->
+  <aside class="left-panel">
+    <div class="panel-scroll">
+
+      <!-- HeyGen Key -->
+      <div class="field-group">
+        <div class="field-label">HeyGen API Key</div>
+        <div class="key-row">
+          <span class="key-icon">⬡</span>
+          <input class="key-input" type="password" id="heygenKey" placeholder="暂跳过，后续填入..." />
+        </div>
+      </div>
+
+      <!-- 主题 -->
+      <div class="field-group">
+        <div class="field-label">口播主题</div>
+        <textarea class="topic-input" id="topicInput" placeholder="输入主题词，例如：普通人如何用AI副业赚到第一个1万..." rows="3"></textarea>
+        <div class="chips">
+          <button class="chip" onclick="setTopic('AI副业赚钱，普通人也能做')">AI副业赚钱</button>
+          <button class="chip" onclick="setTopic('抖音流量密码2025，这3个方法没人告诉你')">抖音流量密码</button>
+          <button class="chip" onclick="setTopic('超级个体时代来了，一个人就是一家公司')">超级个体时代</button>
+          <button class="chip" onclick="setTopic('用AI工具做内容，效率提升10倍的方法')">AI效率工具</button>
+          <button class="chip" onclick="setTopic('数字人口播是什么，普通人能用吗')">数字人科普</button>
+        </div>
+      </div>
+
+      <!-- 配置 -->
+      <div class="field-group">
+        <div class="field-label">生产配置</div>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>时长</label>
+            <select class="config-select" id="duration">
+              <option value="60">60 秒</option>
+              <option value="90" selected>90 秒</option>
+              <option value="120">120 秒</option>
+            </select>
+          </div>
+          <div class="config-item">
+            <label>风格</label>
+            <select class="config-select" id="style">
+              <option value="干货分享" selected>干货分享</option>
+              <option value="知识科普">知识科普</option>
+              <option value="故事叙事">故事叙事</option>
+              <option value="对比反差">对比反差</option>
+            </select>
+          </div>
+          <div class="config-item">
+            <label>数字人</label>
+            <select class="config-select" id="avatar">
+              <option value="nilo_default">霓洛 · 默认</option>
+              <option value="nilo_formal">霓洛 · 正装</option>
+            </select>
+          </div>
+          <div class="config-item">
+            <label>平台</label>
+            <select class="config-select" id="platform">
+              <option value="douyin" selected>抖音</option>
+              <option value="kuaishou">快手</option>
+              <option value="all">全平台</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn-run" id="btnRun" onclick="startPipeline()">
+      <span class="btn-icon">⚡</span>
+      <span id="btnText">启动流水线</span>
+    </button>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right-panel">
+
+    <!-- AGENT TIMELINE -->
+    <div class="timeline-bar">
+      <div class="tl-step">
+        <div class="tl-node">
+          <div class="tl-circle" id="tc-0">📡</div>
+          <div class="tl-label" id="tl-0">热点提取</div>
+        </div>
+        <div class="tl-line"><div class="tl-line-fill" id="tf-0"></div></div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-node">
+          <div class="tl-circle" id="tc-1">✍️</div>
+          <div class="tl-label" id="tl-1">脚本生成</div>
+        </div>
+        <div class="tl-line"><div class="tl-line-fill" id="tf-1"></div></div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-node">
+          <div class="tl-circle" id="tc-2">🎙️</div>
+          <div class="tl-label" id="tl-2">声音合成</div>
+        </div>
+        <div class="tl-line"><div class="tl-line-fill" id="tf-2"></div></div>
+      </div>
+      <div class="tl-step">
+        <div class="tl-node">
+          <div class="tl-circle" id="tc-3">🎭</div>
+          <div class="tl-label" id="tl-3">数字人</div>
+        </div>
+        <div class="tl-line"><div class="tl-line-fill" id="tf-3"></div></div>
+      </div>
+      <div class="tl-step" style="flex:0">
+        <div class="tl-node">
+          <div class="tl-circle" id="tc-4">🎬</div>
+          <div class="tl-label" id="tl-4">后期</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPUT AREA -->
+    <div class="output-area" id="outputArea">
+
+      <!-- 空状态 -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-glyph">N</div>
+        <div class="empty-text">输入主题词，启动流水线</div>
+      </div>
+
+      <!-- 进度卡 -->
+      <div class="progress-card" id="progressCard">
+        <div class="progress-card-header">
+          <span class="progress-card-title">智能体运行状态</span>
+          <span class="progress-pct" id="pctText">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="agent-rows">
+          <div class="agent-row" id="ar-0">
+            <div class="agent-dot"></div>
+            <div class="agent-row-name">Agent 1 · 热点文案提取</div>
+            <div class="agent-row-status" id="ars-0">待机</div>
+          </div>
+          <div class="agent-row" id="ar-1">
+            <div class="agent-dot"></div>
+            <div class="agent-row-name">Agent 2 · 霓洛口播脚本</div>
+            <div class="agent-row-status" id="ars-1">待机</div>
+          </div>
+          <div class="agent-row" id="ar-2">
+            <div class="agent-dot"></div>
+            <div class="agent-row-name">Agent 3 · CosyVoice 声音</div>
+            <div class="agent-row-status" id="ars-2">待机</div>
+          </div>
+          <div class="agent-row" id="ar-3">
+            <div class="agent-dot"></div>
+            <div class="agent-row-name">Agent 4 · HeyGen 数字人</div>
+            <div class="agent-row-status" id="ars-3">待机</div>
+          </div>
+          <div class="agent-row" id="ar-4">
+            <div class="agent-dot"></div>
+            <div class="agent-row-name">Agent 5 · FFmpeg 后期合成</div>
+            <div class="agent-row-status" id="ars-4">待机</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 脚本输出卡 -->
+      <div class="out-card" id="scriptCard">
+        <div class="out-card-header">
+          <div class="out-card-label">
+            <div class="out-card-label-dot"></div>
+            口播脚本
+          </div>
+          <div class="out-card-actions">
+            <button class="btn-sm" onclick="copyText('scriptRaw', '脚本已复制')">复制全文</button>
+          </div>
+        </div>
+        <div class="out-card-body" id="scriptBody">
+          <div id="scriptOutput"></div>
+          <textarea id="scriptRaw" style="display:none"></textarea>
+        </div>
+      </div>
+
+      <!-- 发布文案卡 -->
+      <div class="out-card" id="publishCard">
+        <div class="out-card-header">
+          <div class="out-card-label">
+            <div class="out-card-label-dot" style="background:var(--indigo)"></div>
+            发布文案 & 标签
+          </div>
+          <div class="out-card-actions">
+            <button class="btn-sm" onclick="copyText('publishRaw', '发布文案已复制')">复制</button>
+          </div>
+        </div>
+        <div class="out-card-body">
+          <div class="publish-text" id="publishOutput"></div>
+          <textarea id="publishRaw" style="display:none"></textarea>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = { topic:'', duration:90, style:'干货分享', script:'', trendData:'', running:false };
+
+function setTopic(t) {
+  document.getElementById('topicInput').value = t;
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function copyText(id, msg) {
+  const val = document.getElementById(id).value;
+  navigator.clipboard.writeText(val).then(() => showToast('✓ ' + msg));
+}
+
+// Timeline
+function setTC(i, cls) {
+  document.getElementById(`tc-${i}`).className = `tl-circle ${cls}`;
+  document.getElementById(`tl-${i}`).className = `tl-label ${cls}`;
+}
+
+function fillLine(i) {
+  if (i < 4) document.getElementById(`tf-${i}`).style.width = '100%';
+}
+
+// Agent rows
+function setAR(i, cls, status) {
+  document.getElementById(`ar-${i}`).className = `agent-row ${cls}`;
+  document.getElementById(`ars-${i}`).textContent = status;
+}
+
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('pctText').textContent = pct + '%';
+}
+
+// Claude API
+async function callClaude(userPrompt, systemPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
+}
+
+async function callClaudeStream(userPrompt, systemPrompt, onChunk) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      stream: true,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  if (!res.ok) throw new Error(`Claude ${res.status}`);
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let full = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const lines = dec.decode(value).split('\n').filter(l => l.startsWith('data: '));
+    for (const line of lines) {
+      try {
+        const d = JSON.parse(line.slice(6));
+        if (d.type === 'content_block_delta' && d.delta?.text) {
+          full += d.delta.text;
+          onChunk(full);
+        }
+      } catch(e) {}
+    }
+  }
+  return full;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Render script segments
+function renderScript(text) {
+  const el = document.getElementById('scriptOutput');
+  document.getElementById('scriptRaw').value = text;
+  const parts = text.split(/【(.+?)】/).filter(s => s.trim());
+  let html = '';
+  for (let i = 0; i < parts.length; i += 2) {
+    const tag = parts[i]?.trim();
+    const body = parts[i+1]?.trim();
+    if (tag && body) {
+      html += `<div class="script-block"><div class="script-block-tag">${tag}</div><div class="script-block-text">${body}</div></div>`;
+    } else if (tag) {
+      html += `<div class="script-block"><div class="script-block-text">${tag}</div></div>`;
+    }
+  }
+  el.innerHTML = html || `<div class="script-block"><div class="script-block-text">${text}</div></div>`;
+}
+
+// ── PIPELINE ──
+async function startPipeline() {
+  state.topic = document.getElementById('topicInput').value.trim();
+  state.duration = document.getElementById('duration').value;
+  state.style = document.getElementById('style').value;
+
+  if (!state.topic) { showToast('⚠ 请先输入主题词'); return; }
+
+  // Reset
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('progressCard').classList.add('visible');
+  document.getElementById('scriptCard').classList.remove('visible');
+  document.getElementById('publishCard').classList.remove('visible');
+  document.getElementById('btnRun').disabled = true;
+  document.getElementById('btnText').textContent = '运行中...';
+
+  for (let i = 0; i < 5; i++) { setAR(i, '', '待机'); setTC(i, ''); }
+  for (let i = 0; i < 4; i++) document.getElementById(`tf-${i}`).style.width = '0%';
+  setProgress(0);
+
+  try {
+    // Agent 1
+    setTC(0, 'active'); setAR(0, 'running', '运行中...');
+    setProgress(5);
+    const t0 = Date.now();
+    state.trendData = await callClaude(
+      `主题：${state.topic}\n分析该主题在抖音上的爆款规律，给出：\n1. 3个最强开场钩子句式（直接给句子）\n2. 核心用户痛点（1句话）\n3. 评论区高频互动词（3-5个）\n4. 视频节奏结构特征\n格式简洁，直接输出。`,
+      '你是抖音爆款内容分析专家，直接给结果，不要废话。'
+    );
+    const e0 = ((Date.now()-t0)/1000).toFixed(1)+'s';
+    setTC(0, 'done'); fillLine(0); setAR(0, 'done', e0); setProgress(20);
+
+    // Agent 2 - streaming
+    setTC(1, 'active'); setAR(1, 'running', '生成中...');
+    setProgress(25);
+    document.getElementById('scriptCard').classList.add('visible');
+    document.getElementById('scriptOutput').innerHTML = '<span class="stream-cursor"></span>';
+    const t1 = Date.now();
+
+    state.script = await callClaudeStream(
+      `主题：${state.topic}
+热点数据：${state.trendData}
+时长：${state.duration}秒
+风格：${state.style}
+
+你是霓洛Nilo，抖音上的AI时代翻译官，帮普通人看懂AI浪潮中的机会。
+直接输出口播脚本，严格按以下格式：
+
+【开场钩子 0-5秒】
+（强力开场，制造悬念或冲突，1-2句）
+
+【痛点共鸣 5-20秒】
+（戳中用户，让人觉得"说的就是我"）
+
+【核心干货 20-${Math.round(state.duration*0.7)}秒】
+（3个要点，每点1-2句，口语化，有洞察）
+
+【行动收尾 ${Math.round(state.duration*0.7)}-${state.duration}秒】
+（自然引导点赞收藏，不生硬）
+
+要求：完全口语化，总字数约${Math.round(state.duration*3.5)}字，霓洛语气：理性、有洞察、不说废话。`,
+      '你是霓洛Nilo，真实自然，不用营销话术，直接说干货。',
+      (text) => {
+        document.getElementById('scriptOutput').innerHTML =
+          `<div style="white-space:pre-wrap;font-size:14px;line-height:1.9;color:var(--text);font-family:'Noto Sans SC',sans-serif">${text}<span class="stream-cursor"></span></div>`;
+      }
+    );
+    const e1 = ((Date.now()-t1)/1000).toFixed(1)+'s';
+    renderScript(state.script);
+    setTC(1, 'done'); fillLine(1); setAR(1, 'done', e1); setProgress(45);
+
+    // Agent 3 - CosyVoice (待接入)
+    setTC(2, 'active'); setAR(2, 'running', '待接入...');
+    setProgress(50);
+    await sleep(1200);
+    setTC(2, 'done'); fillLine(2); setAR(2, 'done', '待接入 CosyVoice'); setProgress(60);
+
+    // Agent 4 - HeyGen (待接入)
+    setTC(3, 'active'); setAR(3, 'running', '待接入...');
+    setProgress(65);
+    await sleep(1000);
+    setTC(3, 'done'); fillLine(3); setAR(3, 'done', '待接入 HeyGen'); setProgress(75);
+
+    // Agent 5 - 发布文案
+    setTC(4, 'active'); setAR(4, 'running', '生成中...');
+    setProgress(80);
+    const t4 = Date.now();
+    const pub = await callClaude(
+      `基于口播脚本，生成抖音发布配套内容：\n${state.script.slice(0,400)}\n\n输出：\n1. 视频标题 3个选项（含emoji，25字内）\n2. 话题标签 10个\n3. 最佳发布时间\n4. 评论区第一条互动引导语\n直接给内容，格式清晰。`,
+      '你是抖音运营专家。'
+    );
+    const e4 = ((Date.now()-t4)/1000).toFixed(1)+'s';
+    document.getElementById('publishOutput').textContent = pub;
+    document.getElementById('publishRaw').value = pub;
+    document.getElementById('publishCard').classList.add('visible');
+    setTC(4, 'done'); setAR(4, 'done', e4); setProgress(100);
+
+    showToast('✓ 脚本生产完成');
+
+  } catch(err) {
+    showToast('✗ ' + (err.message || '出错了'));
+    console.error(err);
+  }
+
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnText').textContent = '再次生成';
+}
+</script>
+</body>
+</html>
