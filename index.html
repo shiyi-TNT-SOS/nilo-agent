@@ -158,6 +158,7 @@ body::before {
   flex: 1;
   display: flex;
   overflow: hidden;
+  min-height: 0;
 }
 
 /* ── LEFT PANEL ── */
@@ -374,6 +375,8 @@ body::before {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+  min-height: 0;
 }
 
 /* ── AGENT TIMELINE ── */
@@ -475,10 +478,12 @@ body::before {
 .output-area {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
 }
 
 .output-area::-webkit-scrollbar { width: 3px; }
