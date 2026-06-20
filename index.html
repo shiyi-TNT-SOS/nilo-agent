@@ -1035,36 +1035,49 @@ function setProgress(pct) {
   document.getElementById('pctText').textContent = pct + '%';
 }
 
-// Claude API
+// DeepSeek API
+const DS_KEY = 'sk-858c1605db944d418149b67d63d9c59b';
+const DS_URL = 'https://api.deepseek.com/v1/chat/completions';
+
 async function callClaude(userPrompt, systemPrompt) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(DS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + DS_KEY
+    },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'deepseek-chat',
       max_tokens: 1000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
     })
   });
-  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  if (!res.ok) throw new Error('DeepSeek ' + res.status);
   const d = await res.json();
-  return d.content?.[0]?.text || '';
+  return d.choices?.[0]?.message?.content || '';
 }
 
 async function callClaudeStream(userPrompt, systemPrompt, onChunk) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(DS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + DS_KEY
+    },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model: 'deepseek-chat',
       max_tokens: 1000,
       stream: true,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
     })
   });
-  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  if (!res.ok) throw new Error('DeepSeek ' + res.status);
 
   const reader = res.body.getReader();
   const dec = new TextDecoder();
@@ -1076,9 +1089,12 @@ async function callClaudeStream(userPrompt, systemPrompt, onChunk) {
     const lines = dec.decode(value).split('\n').filter(l => l.startsWith('data: '));
     for (const line of lines) {
       try {
-        const d = JSON.parse(line.slice(6));
-        if (d.type === 'content_block_delta' && d.delta?.text) {
-          full += d.delta.text;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') continue;
+        const d = JSON.parse(raw);
+        const delta = d.choices?.[0]?.delta?.content;
+        if (delta) {
+          full += delta;
           onChunk(full);
         }
       } catch(e) {}
