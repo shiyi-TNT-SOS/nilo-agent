@@ -8,419 +8,233 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #070a10;
-  --panel: #101520;
-  --panel-2: #151b28;
-  --panel-3: #1b2232;
-  --line: #2b3447;
-  --line-soft: rgba(255,255,255,.07);
-  --text: #edf1f7;
-  --muted: #9aa5b8;
-  --dim: #657087;
+  --bg: #070b12;
+  --panel: #121824;
+  --panel-2: #171f2d;
+  --panel-3: #20293a;
+  --line: #2b3446;
+  --line-soft: rgba(255,255,255,.08);
+  --text: #eef3fb;
+  --muted: #9aa6bb;
+  --dim: #65718a;
   --gold: #f2c86b;
-  --gold-2: #d9a93d;
-  --blue: #7b82ff;
+  --gold-2: #d8a93f;
+  --violet: #7f83ff;
   --cyan: #4fd1c5;
-  --red: #fb7185;
   --green: #52d273;
-  --shadow: 0 20px 70px rgba(0,0,0,.35);
-  --radius: 8px;
+  --shadow: 0 22px 70px rgba(0,0,0,.34);
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
   margin: 0;
   color: var(--text);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(123,130,255,.14), transparent 32%),
-    linear-gradient(135deg, #06080e 0%, #0c111b 52%, #06080e 100%);
+  background: radial-gradient(circle at 55% 0%, rgba(87,104,180,.16), transparent 34%), linear-gradient(135deg, #080b12 0%, #101722 52%, #080b12 100%);
   font-family: Inter, 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow: hidden;
 }
 button, textarea, input, select { font: inherit; }
 button { border: 0; }
-.app {
-  height: 100%;
-  display: grid;
-  grid-template-columns: 224px 1fr;
-  min-width: 0;
-}
-.sidebar {
-  border-right: 1px solid var(--line-soft);
-  background: rgba(8,12,19,.72);
-  backdrop-filter: blur(18px);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.logo {
-  height: 76px;
-  display: flex;
-  align-items: center;
-  padding: 0 26px;
-  gap: 10px;
-  border-bottom: 1px solid var(--line-soft);
-}
-.logo strong {
-  font-size: 30px;
-  line-height: 1;
-  color: var(--gold);
-  letter-spacing: -.04em;
-}
-.logo span { color: #f8fafc; font-weight: 800; font-size: 18px; }
-.nav { padding: 18px 14px; display: grid; gap: 7px; }
-.nav-item {
-  height: 48px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--muted);
-  border-radius: var(--radius);
-  font-size: 14px;
-}
-.nav-item.active { background: linear-gradient(90deg, rgba(242,200,107,.16), transparent); color: var(--gold); }
-.nav-icon {
-  width: 22px; height: 22px; border: 1px solid currentColor; border-radius: 6px;
-  display: inline-grid; place-items: center; font-size: 12px; opacity: .9;
-}
-.usage {
-  margin: auto 16px 16px;
-  border: 1px solid var(--line-soft);
-  background: rgba(255,255,255,.035);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-.usage-label { color: var(--muted); font-size: 12px; }
-.bar { height: 7px; background: #242b3b; border-radius: 20px; margin: 10px 0; overflow: hidden; }
-.bar span { display: block; height: 100%; width: 32%; background: linear-gradient(90deg, var(--gold), var(--blue)); }
-.upgrade {
-  width: 100%; height: 38px; margin-top: 12px;
-  border: 1px solid rgba(242,200,107,.65);
-  color: var(--gold); background: rgba(242,200,107,.08);
-  border-radius: 7px; cursor: pointer; font-weight: 700;
-}
-.main { min-width: 0; display: flex; flex-direction: column; height: 100%; }
-.topbar {
-  height: 76px;
-  padding: 0 28px;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--line-soft);
-  background: rgba(9,13,21,.58);
-}
-.title h1 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
-.title p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
-.actions { display: flex; align-items: center; gap: 10px; }
-.btn {
-  height: 38px; padding: 0 15px; border-radius: 7px;
-  border: 1px solid var(--line); background: rgba(255,255,255,.04);
-  color: var(--text); cursor: pointer; font-weight: 700; font-size: 13px;
-}
-.btn.primary { background: linear-gradient(135deg, #6f74f6, #8b6df8); border-color: transparent; color: #fff; }
-.btn.gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #15100a; border-color: transparent; }
+.app { height: 100%; display: grid; grid-template-columns: 230px 1fr; grid-template-rows: 76px 1fr; min-width: 0; }
+.topbar { grid-column: 1 / -1; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; border-bottom: 1px solid var(--line-soft); background: rgba(7,10,16,.82); backdrop-filter: blur(18px); }
+.brand { display: flex; align-items: center; gap: 13px; }
+.brand strong { color: var(--gold); font-size: 32px; letter-spacing: -.04em; line-height: 1; }
+.brand span { font-size: 21px; font-weight: 800; color: #f8fafc; }
+.top-actions { display: flex; align-items: center; gap: 18px; color: var(--muted); }
+.top-actions .divider { width: 1px; height: 20px; background: var(--line); }
+.btn { height: 38px; padding: 0 15px; border-radius: 6px; border: 1px solid var(--line); background: rgba(255,255,255,.035); color: var(--text); cursor: pointer; font-weight: 700; font-size: 13px; }
+.btn.primary { background: linear-gradient(135deg, #686ff2, #8a73ff); border-color: transparent; color: #fff; box-shadow: 0 12px 30px rgba(104,111,242,.24); }
+.btn.gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #17120b; border-color: transparent; }
+.btn.ghost { color: var(--muted); background: transparent; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.workspace {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
-  gap: 14px;
-  padding: 18px;
-  min-height: 0;
-}
-.left, .right { min-height: 0; }
-.panel {
-  background: rgba(16,21,32,.82);
-  border: 1px solid var(--line-soft);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-}
-.input-panel { height: 100%; display: flex; flex-direction: column; min-height: 0; }
-.panel-head {
-  padding: 17px 18px;
-  border-bottom: 1px solid var(--line-soft);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.panel-head h2 { margin: 0; font-size: 15px; }
-.panel-head small { color: var(--muted); }
-.input-scroll { padding: 18px; overflow: auto; min-height: 0; flex: 1 1 auto; }
-.field { margin-bottom: 18px; }
-.label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
-label { color: #d9deea; font-size: 13px; font-weight: 700; }
-.counter { color: var(--dim); font-size: 11px; }
-textarea, input, select {
-  width: 100%;
-  background: #0b1019;
-  border: 1px solid var(--line);
-  color: var(--text);
-  border-radius: 8px;
-  outline: none;
-}
-textarea { min-height: 112px; resize: vertical; padding: 13px 14px; line-height: 1.7; font-size: 13px; }
-input, select { height: 42px; padding: 0 12px; font-size: 13px; }
-textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75); box-shadow: 0 0 0 3px rgba(123,130,255,.11); }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hint { color: var(--dim); font-size: 12px; line-height: 1.6; margin-top: 8px; }
-.upload-box {
-  border: 1px dashed #465064;
-  border-radius: 8px;
-  padding: 12px 14px;
-  text-align: center;
-  color: var(--muted);
-  background: rgba(255,255,255,.025);
-  font-size: 12px;
-}
-.input-actions {
-  order: -1;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--line-soft);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  flex: 0 0 auto;
-  background: rgba(16,21,32,.96);
-  box-shadow: 0 12px 24px rgba(7,10,16,.22);
-}
-.input-actions .btn { padding: 0 8px; min-width: 0; white-space: nowrap; }
-.steps {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
-}
-.step {
-  min-height: 76px;
-  padding: 14px;
-  border: 1px solid var(--line-soft);
-  background: rgba(255,255,255,.035);
-  border-radius: 10px;
-  display: flex; gap: 12px; align-items: flex-start;
-}
-.step-num {
-  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
-  display: grid; place-items: center;
-  border: 1px solid var(--line); color: var(--muted); font-weight: 800;
-}
+.sidebar { grid-row: 2; border-right: 1px solid var(--line-soft); background: rgba(9,13,21,.74); display: flex; flex-direction: column; min-height: 0; }
+.nav { padding: 36px 0 16px; display: grid; gap: 14px; }
+.nav-item { height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 34px; color: var(--muted); font-size: 15px; font-weight: 700; position: relative; }
+.nav-item.active { color: var(--gold); background: linear-gradient(90deg, rgba(242,200,107,.2), rgba(255,255,255,.045)); }
+.nav-item.active::before { content: ''; position: absolute; left: 0; top: 0; width: 5px; height: 100%; background: var(--gold); }
+.nav-icon { width: 26px; height: 26px; border: 1px solid currentColor; border-radius: 6px; display: inline-grid; place-items: center; font-size: 13px; opacity: .95; }
+.usage { margin: auto 18px 20px; padding: 16px; border: 1px solid var(--line-soft); background: rgba(255,255,255,.035); border-radius: 8px; }
+.usage-label { color: var(--muted); font-size: 12px; }
+.bar { height: 6px; background: #242c3d; border-radius: 20px; margin: 10px 0; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 32%; background: linear-gradient(90deg, var(--gold), var(--violet)); }
+.upgrade { width: 100%; height: 38px; margin-top: 14px; border: 1px solid rgba(242,200,107,.72); color: var(--gold); background: rgba(242,200,107,.08); border-radius: 6px; cursor: pointer; font-weight: 800; }
+.operator { padding: 12px 22px 24px; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #c7ceda, #394457); border: 2px solid rgba(255,255,255,.2); }
+.main { grid-row: 2; min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 30px 24px 22px; }
+.steps { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin: 0 28px 20px; position: relative; }
+.step { min-height: 60px; display: flex; align-items: flex-start; gap: 14px; color: var(--dim); position: relative; }
+.step:not(:last-child)::after { content: ''; position: absolute; left: calc(100% - 72px); right: -7px; top: 20px; border-top: 2px dashed rgba(255,255,255,.18); }
+.step-num { width: 40px; height: 40px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; border: 2px solid var(--line); color: var(--dim); font-weight: 900; font-size: 18px; background: rgba(255,255,255,.02); }
 .step.active .step-num { color: #17120b; background: var(--gold); border-color: var(--gold); }
-.step.done .step-num { color: #08130b; background: var(--green); border-color: var(--green); }
-.step strong { display: block; font-size: 13px; margin-top: 1px; }
-.step span { display: block; color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 4px; }
-.output-panel { height: calc(100% - 90px); display: flex; flex-direction: column; min-height: 0; }
-.tabs { display: flex; gap: 24px; padding: 0 18px; border-bottom: 1px solid var(--line-soft); }
-.tab {
-  height: 58px; background: transparent; color: var(--muted); cursor: pointer;
-  border-bottom: 2px solid transparent; font-weight: 800; font-size: 15px;
-}
+.step.done .step-num { color: #09130b; background: var(--green); border-color: var(--green); }
+.step strong { display: block; color: #6e7890; font-size: 16px; margin-top: 2px; }
+.step.active strong, .step.done strong { color: var(--gold); }
+.step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 4px; }
+.workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 500px minmax(0, 1fr); gap: 16px; }
+.left, .right { min-height: 0; }
+.panel { border: 1px solid var(--line-soft); background: rgba(18,24,36,.84); border-radius: 8px; box-shadow: var(--shadow); }
+.input-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; background: linear-gradient(180deg, rgba(30,38,54,.86), rgba(15,20,30,.9)); }
+.panel-head { display: none; }
+.input-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px 16px 14px; }
+.field { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line-soft); }
+.field:last-child { border-bottom: 0; }
+.label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px; }
+label { color: #dce3f1; font-size: 15px; font-weight: 800; }
+label::after { content: ' ⓘ'; color: var(--dim); font-size: 13px; font-weight: 600; }
+.counter { color: var(--dim); font-size: 12px; }
+textarea, input, select { width: 100%; background: #101622; border: 1px solid #30394d; color: var(--text); border-radius: 6px; outline: none; }
+textarea { min-height: 132px; resize: vertical; padding: 14px 16px; line-height: 1.72; font-size: 13px; }
+#factsInput { min-height: 168px; }
+input, select { height: 44px; padding: 0 14px; font-size: 14px; }
+textarea:focus, input:focus, select:focus { border-color: rgba(127,131,255,.72); box-shadow: 0 0 0 3px rgba(127,131,255,.12); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-2 .field { padding-bottom: 0; border-bottom: 0; margin-bottom: 14px; }
+.hint { color: var(--dim); font-size: 12px; line-height: 1.5; margin-top: 8px; display: flex; justify-content: space-between; }
+.hint::after { content: '如何获取高质量对标内容?'; color: #8b8fff; }
+.upload-box { border: 1px dashed #4a556c; border-radius: 7px; min-height: 108px; display: grid; place-items: center; text-align: center; color: var(--muted); background: rgba(255,255,255,.025); font-size: 13px; line-height: 1.7; }
+.input-actions { flex: 0 0 auto; padding: 14px 16px 16px; border-top: 1px solid var(--line-soft); display: grid; gap: 10px; background: rgba(18,24,36,.96); }
+.input-actions .btn { height: 72px; border-radius: 7px; font-size: 18px; flex-direction: column; display: grid; place-items: center; }
+.input-actions .btn small { display: block; color: rgba(255,255,255,.55); font-size: 12px; margin-top: -16px; font-weight: 600; }
+.output-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.tabs { height: 72px; display: flex; gap: 34px; padding: 0 24px; border-bottom: 1px solid var(--line-soft); }
+.tab { height: 72px; background: transparent; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; font-weight: 900; font-size: 17px; }
 .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-.output-toolbar { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-soft); }
-.status { color: var(--muted); font-size: 12px; }
+.output-toolbar { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line-soft); }
+.status { color: var(--muted); font-size: 13px; }
 .status b { color: var(--gold); }
-.output-scroll { padding: 18px; overflow: auto; min-height: 0; }
-.result-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 12px; }
-.result-card {
-  border: 1px solid var(--line-soft);
-  background: rgba(255,255,255,.035);
-  border-radius: 9px;
-  padding: 16px;
-}
-.result-card h3 { margin: 0 0 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-.copy-btn { height: 30px; padding: 0 10px; border-radius: 6px; color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
-.output-text { white-space: pre-wrap; color: #dbe2ef; line-height: 1.8; font-size: 13px; }
-.empty {
-  min-height: 360px;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  color: var(--dim);
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  background: rgba(255,255,255,.02);
-}
-.empty strong { display: block; color: var(--text); margin-bottom: 8px; }
+.copy-btn { height: 34px; padding: 0 13px; border-radius: 6px; color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 800; }
+.output-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 18px 24px 72px; position: relative; }
+.result-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 14px; }
+.result-grid::before { content: '爆款拆解结果'; grid-column: 1 / -1; color: #dbe2ef; font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+.result-card { border: 1px solid var(--line-soft); background: linear-gradient(180deg, rgba(35,43,60,.74), rgba(18,24,36,.74)); border-radius: 7px; padding: 16px; min-height: 360px; }
+.result-card h3 { margin: 0 0 12px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; color: #edf2fb; }
+.output-text { white-space: pre-wrap; color: #dbe2ef; line-height: 1.85; font-size: 13px; }
+.empty { min-height: 470px; display: grid; place-items: center; text-align: center; color: var(--dim); border: 1px dashed var(--line); border-radius: 8px; background: rgba(255,255,255,.018); }
+.empty strong { display: block; color: var(--text); font-size: 18px; margin-bottom: 10px; }
 .script-list { display: grid; gap: 12px; }
-.script-item { border: 1px solid var(--line-soft); border-radius: 9px; padding: 16px; background: rgba(255,255,255,.035); }
-.script-title { color: var(--gold); font-weight: 800; margin-bottom: 10px; }
-.pkg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.script-item { border: 1px solid var(--line-soft); border-radius: 7px; padding: 16px; background: linear-gradient(180deg, rgba(35,43,60,.74), rgba(18,24,36,.74)); }
+.script-title { color: var(--gold); font-weight: 900; margin-bottom: 10px; }
+.pkg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.pill { border: 1px solid var(--line); background: rgba(123,130,255,.08); color: #cbd1ff; border-radius: 100px; padding: 6px 10px; font-size: 12px; }
-.toast {
-  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px);
-  background: #151b28; border: 1px solid var(--line); color: var(--text);
-  padding: 10px 16px; border-radius: 9px; box-shadow: var(--shadow);
-  opacity: 0; pointer-events: none; transition: .22s ease; font-size: 13px;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.error-panel { display: none; margin-bottom: 16px; padding: 14px 16px; border: 1px solid rgba(255,110,90,.35); background: rgba(255,110,90,.08); color: #ffd2ca; border-radius: 8px; font-size: 13px; line-height: 1.7; }
+.pill { border: 1px solid var(--line); background: rgba(127,131,255,.08); color: #cbd1ff; border-radius: 100px; padding: 6px 10px; font-size: 12px; }
+.stage-footer { position: absolute; right: 24px; bottom: 18px; display: flex; gap: 16px; }
+.stage-footer .btn { height: 48px; min-width: 140px; font-size: 15px; }
+.error-panel { display: none; margin-bottom: 16px; padding: 14px 16px; border: 1px solid rgba(255,110,90,.35); background: rgba(255,110,90,.08); color: #ffd2ca; border-radius: 7px; font-size: 13px; line-height: 1.7; }
 .error-panel strong { display: block; color: #fff; margin-bottom: 4px; }
 .error-panel button { margin-top: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: var(--text); border-radius: 6px; padding: 7px 10px; cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px); background: #151b28; border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 8px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .22s ease; font-size: 13px; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .loading { display: inline-block; width: 1.5px; height: 1em; background: var(--gold); margin-left: 2px; vertical-align: -2px; animation: blink .8s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
-@media (max-width: 1040px) {
+@media (max-width: 1180px) {
   body { overflow: auto; }
-  .app { min-height: 100%; grid-template-columns: 1fr; }
+  .app { min-height: 100%; height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .topbar, .sidebar, .main { grid-column: 1; grid-row: auto; }
   .sidebar { display: none; }
-  .main { min-height: 100vh; }
+  .main { min-height: 100vh; padding: 18px; }
   .workspace { grid-template-columns: 1fr; }
-  .output-panel { height: auto; min-height: 540px; }
+  .output-panel { min-height: 620px; }
 }
-@media (max-width: 680px) {
+@media (max-width: 720px) {
   .topbar { height: auto; padding: 16px; align-items: flex-start; gap: 14px; flex-direction: column; }
-  .actions { width: 100%; }
-  .actions .btn { flex: 1; }
-  .workspace { padding: 12px; }
+  .brand strong { font-size: 28px; }
+  .brand span { font-size: 18px; }
   .steps, .result-grid, .pkg-grid, .grid-2 { grid-template-columns: 1fr; }
-  .tabs { gap: 12px; overflow-x: auto; }
+  .step:not(:last-child)::after { display: none; }
+  .tabs { gap: 16px; overflow-x: auto; }
   .tab { flex: 0 0 auto; }
+  .stage-footer { position: static; margin-top: 16px; }
 }
 </style>
 </head>
 <body>
 <div class="app">
+  <header class="topbar">
+    <div class="brand"><strong>Nilo</strong><span>爆款口播工作台</span></div>
+    <div class="top-actions">
+      <button class="btn" id="clearBtn">↗ 新建任务</button>
+      <span class="divider"></span>
+      <button class="btn ghost" id="sampleBtn">◷ 历史记录</button>
+    </div>
+  </header>
+
   <aside class="sidebar">
-    <div class="logo"><strong>Nilo</strong><span>爆款口播工作台</span></div>
     <nav class="nav">
       <div class="nav-item active"><span class="nav-icon">▦</span>工作台</div>
-      <div class="nav-item"><span class="nav-icon">□</span>素材库</div>
-      <div class="nav-item"><span class="nav-icon">↗</span>爆款库</div>
+      <div class="nav-item"><span class="nav-icon">▧</span>素材库</div>
+      <div class="nav-item"><span class="nav-icon">♙</span>爆款库</div>
       <div class="nav-item"><span class="nav-icon">◎</span>品牌库</div>
-      <div class="nav-item"><span class="nav-icon">≡</span>发布记录</div>
+      <div class="nav-item"><span class="nav-icon">▤</span>发布记录</div>
       <div class="nav-item"><span class="nav-icon">⚙</span>设置</div>
     </nav>
     <div class="usage">
       <div class="usage-label">今日用量</div>
       <div class="bar"><span></span></div>
       <strong>38</strong><span class="usage-label"> / 200</span>
-      <button class="upgrade">升级套餐</button>
+      <button class="upgrade">♕ 升级套餐</button>
     </div>
+    <div class="operator"><span class="avatar"></span><span>运营小K</span><span style="margin-left:auto">⌄</span></div>
   </aside>
 
   <main class="main">
-    <header class="topbar">
-      <div class="title">
-        <h1>把对标内容，变成可拍、可卖、可复用的口播执行稿</h1>
-        <p>先拆结构，再按你的产品事实原创仿写；成片、配音和发布作为后续 Worker 接入。</p>
-      </div>
-      <div class="actions">
-        <button class="btn" id="sampleBtn">填入示例</button>
-        <button class="btn" id="clearBtn">新建任务</button>
-      </div>
-    </header>
+    <div class="steps">
+      <div class="step active" id="step1"><div class="step-num">1</div><div><strong>拆解爆款结构</strong><span>分析对标内容，提炼结构</span></div></div>
+      <div class="step" id="step2"><div class="step-num">2</div><div><strong>生成仿写脚本</strong><span>基于产品事实，生成脚本</span></div></div>
+      <div class="step" id="step3"><div class="step-num">3</div><div><strong>生成发布包</strong><span>生成标题、标签、封面等素材</span></div></div>
+      <div class="step" id="step4"><div class="step-num">4</div><div><strong>发布与执行</strong><span>一键发布到平台</span></div></div>
+    </div>
 
     <section class="workspace">
       <div class="left">
         <div class="panel input-panel">
-          <div class="panel-head">
-            <div><h2>任务输入</h2><small>对标内容 + 产品事实</small></div>
-            <small id="saveState">未保存</small>
-          </div>
+          <div class="panel-head"><div><h2>任务输入</h2><small>对标内容 + 产品事实</small></div><small id="saveState">未保存</small></div>
           <div class="input-scroll">
             <div class="field">
-              <div class="label-row"><label for="referenceInput">对标内容</label><span class="counter" id="referenceCount">0/4000</span></div>
-              <textarea id="referenceInput" placeholder="粘贴对标视频文案、抖音链接旁的分享文本，或你已经转写好的口播原文。V1 先做结构学习，不直接搬运原文。"></textarea>
-              <div class="hint">建议包含：开头钩子、口播正文、评论区高频问题或你观察到的爆点。</div>
+              <div class="label-row"><label for="referenceInput">对标内容</label><button class="copy-btn" type="button">⊕ 从爆款库选择</button></div>
+              <textarea id="referenceInput" maxlength="4000" placeholder="粘贴视频链接或文案，支持抖音、视频号、小红书等链接
+
+https://v.douyin.com/xxxxxxxxxxx"></textarea>
+              <div class="hint"><span>示例链接</span><span class="counter" id="referenceCount">0/4000</span></div>
             </div>
 
             <div class="field">
-              <div class="label-row"><label for="factsInput">产品事实</label><span class="counter" id="factsCount">0/3000</span></div>
-              <textarea id="factsInput" placeholder="输入你的产品/服务事实：名称、卖点、适用人群、价格、优惠、证明材料、不能说的话。模型只基于这里生成，不编造功效。"></textarea>
+              <div class="label-row"><label for="factsInput">产品事实</label><button class="copy-btn" type="button">⊕ 从产品库选择</button></div>
+              <textarea id="factsInput" maxlength="3000" placeholder="请输入产品核心卖点、功能、使用场景、用户人群等，建议分点
+
+· 产品名称：Nilo 智能降噪耳机
+· 核心卖点：主动降噪、超长续航、通话清晰
+· 适用场景：通勤、办公、学习、旅行
+· 目标人群：学生、上班族、差旅人群"></textarea>
+              <div class="hint"><span></span><span class="counter" id="factsCount">0/3000</span></div>
             </div>
 
             <div class="grid-2">
-              <div class="field">
-                <label for="toneSelect">人设语气</label>
-                <select id="toneSelect">
-                  <option value="理性干货型">理性干货型</option>
-                  <option value="老板IP型">老板IP型</option>
-                  <option value="朋友聊天型">朋友聊天型</option>
-                  <option value="测评种草型">测评种草型</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="durationSelect">目标时长</label>
-                <select id="durationSelect">
-                  <option value="45秒">45秒</option>
-                  <option value="60秒" selected>60秒</option>
-                  <option value="90秒">90秒</option>
-                  <option value="120秒">120秒</option>
-                </select>
-              </div>
+              <div class="field"><label for="toneSelect">人设语气</label><select id="toneSelect"><option value="理性干货型">理性干货型</option><option value="老板IP型">老板IP型</option><option value="朋友聊天型">朋友聊天型</option><option value="测评种草型">测评种草型</option></select></div>
+              <div class="field"><label for="durationSelect">目标时长</label><select id="durationSelect"><option value="45秒">45秒</option><option value="60秒" selected>60秒</option><option value="90秒">90秒</option><option value="120秒">120秒</option></select></div>
             </div>
-
             <div class="grid-2">
-              <div class="field">
-                <label for="platformSelect">发布平台</label>
-                <select id="platformSelect">
-                  <option value="抖音">抖音</option>
-                  <option value="视频号">视频号</option>
-                  <option value="小红书">小红书</option>
-                  <option value="全平台通用">全平台通用</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="goalSelect">内容目标</label>
-                <select id="goalSelect">
-                  <option value="引流获客">引流获客</option>
-                  <option value="带货转化">带货转化</option>
-                  <option value="账号涨粉">账号涨粉</option>
-                  <option value="品牌认知">品牌认知</option>
-                </select>
-              </div>
+              <div class="field"><label for="platformSelect">发布平台</label><select id="platformSelect"><option value="抖音">抖音</option><option value="视频号">视频号</option><option value="小红书">小红书</option><option value="全平台通用">全平台通用</option></select></div>
+              <div class="field"><label for="goalSelect">内容目标</label><select id="goalSelect"><option value="引流获客">引流获客</option><option value="带货转化">带货转化</option><option value="账号涨粉">账号涨粉</option><option value="品牌认知">品牌认知</option></select></div>
             </div>
-
-            <div class="field">
-              <label>参考资料（后续接入）</label>
-              <div class="upload-box">上传视频、商品图、授权声音样本将在 V2 接入；当前版本先完成文案闭环。</div>
-            </div>
+            <div class="field"><label>参考资料（选填）</label><div class="upload-box">↥ 点击上传或拖拽文件到此处<br>支持图片、文档、视频，最多10个，单个 &lt; 50MB</div></div>
           </div>
-          <div class="input-actions">
-            <button class="btn gold" id="analyzeBtn">拆解爆款结构</button>
-            <button class="btn primary" id="scriptBtn">生成仿写脚本</button>
-            <button class="btn" id="packageBtn">生成发布包</button>
-          </div>
+          <div class="input-actions"><button class="btn gold" id="analyzeBtn">开始拆解<small>预计需要 10-30 秒</small></button></div>
         </div>
       </div>
 
       <div class="right">
-        <div class="steps">
-          <div class="step active" id="step1"><div class="step-num">1</div><div><strong>拆解爆款结构</strong><span>抽象钩子、痛点、节奏和转化逻辑</span></div></div>
-          <div class="step" id="step2"><div class="step-num">2</div><div><strong>生成原创脚本</strong><span>基于你的产品事实输出多版本口播</span></div></div>
-          <div class="step" id="step3"><div class="step-num">3</div><div><strong>发布执行包</strong><span>标题、封面、标签、评论区引导</span></div></div>
-          <div class="step" id="step4"><div class="step-num">4</div><div><strong>成片与发布</strong><span>V2 接 TTS、数字人、FFmpeg 和审核</span></div></div>
-        </div>
-
         <div class="panel output-panel">
-          <div class="tabs">
-            <button class="tab active" data-tab="analysis">爆款拆解</button>
-            <button class="tab" data-tab="scripts">仿写脚本</button>
-            <button class="tab" data-tab="package">发布包</button>
-          </div>
-          <div class="output-toolbar">
-            <div class="status" id="runStatus">状态：<b>等待输入</b></div>
-            <button class="copy-btn" id="copyActiveBtn">复制当前结果</button>
-          </div>
+          <div class="tabs"><button class="tab active" data-tab="analysis">爆款拆解</button><button class="tab" data-tab="scripts">仿写脚本</button><button class="tab" data-tab="package">发布包</button></div>
+          <div class="output-toolbar"><div class="status" id="runStatus">状态：<b>等待输入</b></div><button class="copy-btn" id="copyActiveBtn">复制当前结果</button></div>
           <div class="output-scroll">
             <section class="tab-pane" id="analysisPane">
               <div class="error-panel" id="errorPanel"><strong>生成失败</strong><span id="errorText"></span><br><button id="retryBtn">重试上一步</button></div>
-              <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容和产品事实后，点击“拆解爆款结构”。</div></div>
-              <div class="result-grid" id="analysisResult" style="display:none">
-                <div class="result-card"><h3>结构拆解 <button class="copy-btn" data-copy="analysisStructure">复制</button></h3><div class="output-text" id="analysisStructure"></div></div>
-                <div class="result-card"><h3>原文节奏与可迁移模板 <button class="copy-btn" data-copy="analysisTemplate">复制</button></h3><div class="output-text" id="analysisTemplate"></div></div>
-              </div>
+              <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容和产品事实后，点击“开始拆解”。</div></div>
+              <div class="result-grid" id="analysisResult" style="display:none"><div class="result-card"><h3>结构拆解 <button class="copy-btn" data-copy="analysisStructure">复制</button></h3><div class="output-text" id="analysisStructure"></div></div><div class="result-card"><h3>爆款文案与可迁移模板 <button class="copy-btn" data-copy="analysisTemplate">复制</button></h3><div class="output-text" id="analysisTemplate"></div></div></div>
             </section>
-
-            <section class="tab-pane" id="scriptsPane" style="display:none">
-              <div class="empty" id="scriptsEmpty"><div><strong>脚本会在这里生成</strong>建议先完成爆款拆解，再生成 3 个原创版本。</div></div>
-              <div class="script-list" id="scriptsResult" style="display:none"></div>
-            </section>
-
-            <section class="tab-pane" id="packagePane" style="display:none">
-              <div class="empty" id="packageEmpty"><div><strong>发布包还没生成</strong>生成脚本后，再输出标题、封面文案、标签和执行清单。</div></div>
-              <div class="pkg-grid" id="packageResult" style="display:none">
-                <div class="result-card"><h3>标题与封面 <button class="copy-btn" data-copy="titlesOutput">复制</button></h3><div class="output-text" id="titlesOutput"></div></div>
-                <div class="result-card"><h3>标签与评论区 <button class="copy-btn" data-copy="tagsOutput">复制</button></h3><div class="output-text" id="tagsOutput"></div></div>
-                <div class="result-card"><h3>拍摄执行清单 <button class="copy-btn" data-copy="shotOutput">复制</button></h3><div class="output-text" id="shotOutput"></div></div>
-                <div class="result-card"><h3>合规提醒 <button class="copy-btn" data-copy="riskOutput">复制</button></h3><div class="output-text" id="riskOutput"></div></div>
-              </div>
-            </section>
+            <section class="tab-pane" id="scriptsPane" style="display:none"><div class="empty" id="scriptsEmpty"><div><strong>脚本会在这里生成</strong>完成爆款拆解后，生成 3 个原创版本。</div></div><div class="script-list" id="scriptsResult" style="display:none"></div></section>
+            <section class="tab-pane" id="packagePane" style="display:none"><div class="empty" id="packageEmpty"><div><strong>发布包还没生成</strong>生成脚本后，再输出标题、封面文案、标签和执行清单。</div></div><div class="pkg-grid" id="packageResult" style="display:none"><div class="result-card"><h3>标题与封面 <button class="copy-btn" data-copy="titlesOutput">复制</button></h3><div class="output-text" id="titlesOutput"></div></div><div class="result-card"><h3>标签与评论区 <button class="copy-btn" data-copy="tagsOutput">复制</button></h3><div class="output-text" id="tagsOutput"></div></div><div class="result-card"><h3>拍摄执行清单 <button class="copy-btn" data-copy="shotOutput">复制</button></h3><div class="output-text" id="shotOutput"></div></div><div class="result-card"><h3>合规提醒 <button class="copy-btn" data-copy="riskOutput">复制</button></h3><div class="output-text" id="riskOutput"></div></div></div></section>
+            <div class="stage-footer"><button class="btn" type="button">上一步</button><button class="btn primary" id="scriptBtn" type="button">生成仿写脚本 →</button><button class="btn" id="packageBtn" type="button">生成发布包</button></div>
           </div>
         </div>
       </div>
