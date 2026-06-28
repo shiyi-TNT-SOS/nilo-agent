@@ -1,1240 +1,726 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>霓洛 · 数字人口播智能体</title>
+<title>Nilo 爆款口播工作台</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --void: #050508;
-  --deep: #09090F;
-  --surface: #0F0F1A;
-  --lift: #161625;
-  --rim: #222238;
-  --rim2: #2E2E50;
-  --gold: #C8A96E;
-  --gold-hi: #E2C68A;
-  --gold-lo: rgba(200,169,110,0.15);
-  --gold-glow: rgba(200,169,110,0.08);
-  --indigo: #6366F1;
-  --indigo-hi: #818CF8;
-  --indigo-lo: rgba(99,102,241,0.12);
-  --text: #E8E8F2;
-  --text2: #8888AA;
-  --text3: #44445A;
-  --ok: #34D399;
-  --warn: #FBBF24;
-  --err: #F87171;
+  --bg: #070a10;
+  --panel: #101520;
+  --panel-2: #151b28;
+  --panel-3: #1b2232;
+  --line: #2b3447;
+  --line-soft: rgba(255,255,255,.07);
+  --text: #edf1f7;
+  --muted: #9aa5b8;
+  --dim: #657087;
+  --gold: #f2c86b;
+  --gold-2: #d9a93d;
+  --blue: #7b82ff;
+  --cyan: #4fd1c5;
+  --red: #fb7185;
+  --green: #52d273;
+  --shadow: 0 20px 70px rgba(0,0,0,.35);
+  --radius: 8px;
 }
-
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-html { height: 100%; }
-
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  background: var(--void);
+  margin: 0;
   color: var(--text);
-  font-family: 'DM Sans', 'Noto Sans SC', sans-serif;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(123,130,255,.14), transparent 32%),
+    linear-gradient(135deg, #06080e 0%, #0c111b 52%, #06080e 100%);
+  font-family: Inter, 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+button, textarea, input, select { font: inherit; }
+button { border: 0; }
+.app {
   height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── NOISE TEXTURE ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.4;
-}
-
-/* ── AMBIENT LIGHT ── */
-.ambient {
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
-}
-.ambient-1 {
-  top: -300px; left: 50%;
-  transform: translateX(-50%);
-  width: 1000px; height: 600px;
-  background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 65%);
-}
-.ambient-2 {
-  bottom: -200px; right: -100px;
-  width: 600px; height: 600px;
-  background: radial-gradient(ellipse, rgba(200,169,110,0.05) 0%, transparent 65%);
-}
-
-/* ── TOPBAR ── */
-.topbar {
-  position: relative;
-  z-index: 10;
-  flex-shrink: 0;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  border-bottom: 1px solid var(--rim);
-  background: rgba(5,5,8,0.9);
-  backdrop-filter: blur(16px);
-}
-
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.brand-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--gold);
-  letter-spacing: 0.5px;
-}
-
-.brand-name em {
-  font-style: normal;
-  color: var(--text3);
-  font-size: 14px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 300;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-left: 4px;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 12px;
-  border: 1px solid var(--rim);
-  border-radius: 100px;
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: 0.5px;
-}
-
-.pulse-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 8px var(--ok);
-  animation: pulse 2.5s ease infinite;
-}
-
-@keyframes pulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:0.3; transform:scale(0.8); }
-}
-
-.version-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--text3);
-  letter-spacing: 1px;
-}
-
-/* ── LAYOUT ── */
-.workspace {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* ── LEFT PANEL ── */
-.left-panel {
-  width: 380px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--rim);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--deep);
-}
-
-.panel-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 28px 24px;
-}
-
-.panel-scroll::-webkit-scrollbar { width: 3px; }
-.panel-scroll::-webkit-scrollbar-thumb { background: var(--rim2); border-radius: 2px; }
-
-/* 区块标签 */
-.field-group {
-  margin-bottom: 28px;
-}
-
-.field-label {
-  font-size: 10px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.field-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--rim);
-}
-
-/* API Key */
-.key-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--rim);
-  border-radius: 8px;
-  transition: border-color 0.2s;
-}
-
-.key-row:focus-within {
-  border-color: rgba(200,169,110,0.4);
-}
-
-.key-icon {
-  font-size: 13px;
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.key-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text2);
-  letter-spacing: 0.5px;
-}
-
-.key-input::placeholder { color: var(--text3); }
-
-/* 主题输入 */
-.topic-input {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--rim);
-  border-radius: 8px;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-family: 'Noto Sans SC', 'DM Sans', sans-serif;
-  color: var(--text);
-  outline: none;
-  resize: none;
-  line-height: 1.6;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  min-height: 72px;
-}
-
-.topic-input:focus {
-  border-color: rgba(99,102,241,0.5);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.06);
-}
-
-.topic-input::placeholder { color: var(--text3); }
-
-/* 快选胶囊 */
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.chip {
-  padding: 4px 11px;
-  background: transparent;
-  border: 1px solid var(--rim);
-  border-radius: 100px;
-  font-size: 11px;
-  color: var(--text3);
-  cursor: pointer;
-  font-family: 'Noto Sans SC', sans-serif;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.chip:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--gold-glow);
-}
-
-/* 配置网格 */
-.config-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.config-item label {
-  display: block;
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.config-select {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--rim);
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--text2);
-  font-family: 'DM Sans', sans-serif;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.config-select:focus { border-color: var(--indigo); }
-
-/* ── RUN BUTTON ── */
-.btn-run {
-  margin: 0 24px 24px;
-  width: calc(100% - 48px);
-  padding: 14px;
-  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #818CF8 100%);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-  letter-spacing: 0.3px;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-run::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
-}
-
-.btn-run:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 24px rgba(99,102,241,0.35);
-}
-
-.btn-run:active { transform: translateY(0); }
-
-.btn-run:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-icon { font-size: 15px; }
-
-/* ── RIGHT PANEL ── */
-.right-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  grid-template-columns: 224px 1fr;
   min-width: 0;
+}
+.sidebar {
+  border-right: 1px solid var(--line-soft);
+  background: rgba(8,12,19,.72);
+  backdrop-filter: blur(18px);
+  display: flex;
+  flex-direction: column;
   min-height: 0;
 }
-
-/* ── AGENT TIMELINE ── */
-.timeline-bar {
-  flex-shrink: 0;
-  padding: 20px 32px;
-  border-bottom: 1px solid var(--rim);
-  background: var(--deep);
+.logo {
+  height: 76px;
   display: flex;
   align-items: center;
-  gap: 0;
+  padding: 0 26px;
+  gap: 10px;
+  border-bottom: 1px solid var(--line-soft);
 }
-
-.tl-step {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.tl-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  position: relative;
-}
-
-.tl-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--rim2);
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: all 0.4s;
-  position: relative;
-}
-
-.tl-circle.active {
-  border-color: var(--indigo);
-  background: var(--indigo-lo);
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
-}
-
-.tl-circle.done {
-  border-color: var(--gold);
-  background: var(--gold-lo);
-  box-shadow: 0 0 0 4px var(--gold-glow);
-}
-
-/* 流光动画 */
-.tl-circle.active::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid var(--indigo);
-  animation: ring-pulse 1.5s ease infinite;
-}
-
-@keyframes ring-pulse {
-  0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-.tl-label {
-  font-size: 10px;
-  color: var(--text3);
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-}
-
-.tl-label.active { color: var(--indigo-hi); }
-.tl-label.done { color: var(--gold); }
-
-.tl-line {
-  flex: 1;
-  height: 1px;
-  background: var(--rim);
-  margin: 0 6px;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.tl-line-fill {
-  position: absolute;
-  left: 0; top: 0;
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--indigo), var(--gold));
-  transition: width 0.6s ease;
-}
-
-/* ── OUTPUT AREA ── */
-.output-area {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 0;
-}
-
-.output-area::-webkit-scrollbar { width: 3px; }
-.output-area::-webkit-scrollbar-thumb { background: var(--rim2); border-radius: 2px; }
-
-/* 空状态 */
-.empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  opacity: 0.4;
-}
-
-.empty-glyph {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 80px;
-  font-weight: 300;
-  color: var(--gold);
+.logo strong {
+  font-size: 30px;
   line-height: 1;
-  letter-spacing: -4px;
-}
-
-.empty-text {
-  font-size: 13px;
-  color: var(--text3);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-/* 进度卡 */
-.progress-card {
-  background: var(--surface);
-  border: 1px solid var(--rim);
-  border-radius: 12px;
-  overflow: hidden;
-  display: none;
-}
-
-.progress-card.visible { display: block; }
-
-.progress-card-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--rim);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.progress-card-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text2);
-  letter-spacing: 0.5px;
-}
-
-.progress-pct {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
   color: var(--gold);
+  letter-spacing: -.04em;
 }
-
-.progress-track {
-  height: 2px;
-  background: var(--rim);
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--indigo), var(--gold));
-  transition: width 0.5s ease;
-  width: 0%;
-}
-
-.agent-rows {
-  padding: 8px 0;
-}
-
-.agent-row {
+.logo span { color: #f8fafc; font-weight: 800; font-size: 18px; }
+.nav { padding: 18px 14px; display: grid; gap: 7px; }
+.nav-item {
+  height: 48px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 20px;
-  transition: background 0.2s;
-}
-
-.agent-row.running { background: rgba(99,102,241,0.04); }
-.agent-row.done { background: rgba(200,169,110,0.03); }
-
-.agent-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--rim2);
-  flex-shrink: 0;
-  transition: all 0.3s;
-}
-
-.agent-row.running .agent-dot {
-  background: var(--indigo);
-  box-shadow: 0 0 6px var(--indigo);
-  animation: pulse 1s infinite;
-}
-
-.agent-row.done .agent-dot {
-  background: var(--gold);
-  box-shadow: 0 0 6px rgba(200,169,110,0.5);
-}
-
-.agent-row.error .agent-dot { background: var(--err); }
-
-.agent-row-name {
-  flex: 1;
-  font-size: 12px;
-  color: var(--text3);
-  transition: color 0.2s;
-}
-
-.agent-row.running .agent-row-name { color: var(--text2); }
-.agent-row.done .agent-row-name { color: var(--text2); }
-
-.agent-row-status {
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text3);
-  transition: color 0.2s;
-}
-
-.agent-row.running .agent-row-status { color: var(--indigo-hi); }
-.agent-row.done .agent-row-status { color: var(--gold); }
-
-/* 输出卡 */
-.out-card {
-  background: var(--surface);
-  border: 1px solid var(--rim);
-  border-radius: 12px;
-  overflow: hidden;
-  display: none;
-  animation: fadeUp 0.4s ease;
-}
-
-.out-card.visible { display: block; }
-
-@keyframes fadeUp {
-  from { opacity:0; transform: translateY(12px); }
-  to { opacity:1; transform: translateY(0); }
-}
-
-.out-card-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--rim);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.out-card-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text3);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.out-card-label-dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--gold);
-}
-
-.out-card-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-sm {
-  padding: 4px 12px;
-  background: transparent;
-  border: 1px solid var(--rim);
-  border-radius: 5px;
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-sm:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.out-card-body { padding: 20px; }
-
-/* 脚本段落 */
-.script-block {
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  background: var(--lift);
-  border-radius: 8px;
-  border-left: 2px solid var(--indigo);
-}
-
-.script-block:last-child { margin-bottom: 0; }
-
-.script-block-tag {
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--indigo-hi);
-  margin-bottom: 8px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.script-block-text {
+  gap: 12px;
+  color: var(--muted);
+  border-radius: var(--radius);
   font-size: 14px;
-  line-height: 1.85;
+}
+.nav-item.active { background: linear-gradient(90deg, rgba(242,200,107,.16), transparent); color: var(--gold); }
+.nav-icon {
+  width: 22px; height: 22px; border: 1px solid currentColor; border-radius: 6px;
+  display: inline-grid; place-items: center; font-size: 12px; opacity: .9;
+}
+.usage {
+  margin: auto 16px 16px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,.035);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.usage-label { color: var(--muted); font-size: 12px; }
+.bar { height: 7px; background: #242b3b; border-radius: 20px; margin: 10px 0; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 32%; background: linear-gradient(90deg, var(--gold), var(--blue)); }
+.upgrade {
+  width: 100%; height: 38px; margin-top: 12px;
+  border: 1px solid rgba(242,200,107,.65);
+  color: var(--gold); background: rgba(242,200,107,.08);
+  border-radius: 7px; cursor: pointer; font-weight: 700;
+}
+.main { min-width: 0; display: flex; flex-direction: column; height: 100%; }
+.topbar {
+  height: 76px;
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line-soft);
+  background: rgba(9,13,21,.58);
+}
+.title h1 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.title p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.actions { display: flex; align-items: center; gap: 10px; }
+.btn {
+  height: 38px; padding: 0 15px; border-radius: 7px;
+  border: 1px solid var(--line); background: rgba(255,255,255,.04);
+  color: var(--text); cursor: pointer; font-weight: 700; font-size: 13px;
+}
+.btn.primary { background: linear-gradient(135deg, #6f74f6, #8b6df8); border-color: transparent; color: #fff; }
+.btn.gold { background: linear-gradient(135deg, var(--gold), var(--gold-2)); color: #15100a; border-color: transparent; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  min-height: 0;
+}
+.left, .right { min-height: 0; }
+.panel {
+  background: rgba(16,21,32,.82);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.input-panel { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.panel-head {
+  padding: 17px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.panel-head h2 { margin: 0; font-size: 15px; }
+.panel-head small { color: var(--muted); }
+.input-scroll { padding: 18px; overflow: auto; min-height: 0; }
+.field { margin-bottom: 18px; }
+.label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
+label { color: #d9deea; font-size: 13px; font-weight: 700; }
+.counter { color: var(--dim); font-size: 11px; }
+textarea, input, select {
+  width: 100%;
+  background: #0b1019;
+  border: 1px solid var(--line);
   color: var(--text);
-  font-family: 'Noto Sans SC', sans-serif;
-}
-
-/* 发布内容 */
-.publish-text {
-  font-size: 13px;
-  line-height: 1.9;
-  color: var(--text2);
-  white-space: pre-wrap;
-  font-family: 'Noto Sans SC', 'DM Sans', sans-serif;
-}
-
-/* streaming cursor */
-.stream-cursor {
-  display: inline-block;
-  width: 1.5px;
-  height: 1em;
-  background: var(--indigo-hi);
-  vertical-align: text-bottom;
-  animation: blink 0.7s step-end infinite;
-  margin-left: 1px;
-}
-
-@keyframes blink {
-  0%,100% { opacity:1; }
-  50% { opacity:0; }
-}
-
-/* toast */
-.toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  padding: 10px 20px;
-  background: var(--lift);
-  border: 1px solid var(--rim2);
   border-radius: 8px;
+  outline: none;
+}
+textarea { min-height: 128px; resize: vertical; padding: 13px 14px; line-height: 1.7; font-size: 13px; }
+input, select { height: 42px; padding: 0 12px; font-size: 13px; }
+textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75); box-shadow: 0 0 0 3px rgba(123,130,255,.11); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hint { color: var(--dim); font-size: 12px; line-height: 1.6; margin-top: 8px; }
+.upload-box {
+  border: 1px dashed #465064;
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(255,255,255,.025);
   font-size: 12px;
-  color: var(--text2);
-  z-index: 100;
-  opacity: 0;
-  transition: all 0.25s;
-  white-space: nowrap;
-  pointer-events: none;
 }
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.input-actions {
+  padding: 16px 18px;
+  border-top: 1px solid var(--line-soft);
+  display: grid; gap: 10px;
 }
-
-/* divider */
-.divider {
-  height: 1px;
-  background: var(--rim);
-  margin: 4px 24px;
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
 }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 900px) {
+.step {
+  min-height: 76px;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,.035);
+  border-radius: 10px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); color: var(--muted); font-weight: 800;
+}
+.step.active .step-num { color: #17120b; background: var(--gold); border-color: var(--gold); }
+.step.done .step-num { color: #08130b; background: var(--green); border-color: var(--green); }
+.step strong { display: block; font-size: 13px; margin-top: 1px; }
+.step span { display: block; color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 4px; }
+.output-panel { height: calc(100% - 90px); display: flex; flex-direction: column; min-height: 0; }
+.tabs { display: flex; gap: 24px; padding: 0 18px; border-bottom: 1px solid var(--line-soft); }
+.tab {
+  height: 58px; background: transparent; color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; font-weight: 800; font-size: 15px;
+}
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.output-toolbar { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line-soft); }
+.status { color: var(--muted); font-size: 12px; }
+.status b { color: var(--gold); }
+.output-scroll { padding: 18px; overflow: auto; min-height: 0; }
+.result-grid { display: grid; grid-template-columns: .95fr 1.05fr; gap: 12px; }
+.result-card {
+  border: 1px solid var(--line-soft);
+  background: rgba(255,255,255,.035);
+  border-radius: 9px;
+  padding: 16px;
+}
+.result-card h3 { margin: 0 0 12px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+.copy-btn { height: 30px; padding: 0 10px; border-radius: 6px; color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--line); cursor: pointer; font-size: 12px; }
+.output-text { white-space: pre-wrap; color: #dbe2ef; line-height: 1.8; font-size: 13px; }
+.empty {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--dim);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+.empty strong { display: block; color: var(--text); margin-bottom: 8px; }
+.script-list { display: grid; gap: 12px; }
+.script-item { border: 1px solid var(--line-soft); border-radius: 9px; padding: 16px; background: rgba(255,255,255,.035); }
+.script-title { color: var(--gold); font-weight: 800; margin-bottom: 10px; }
+.pkg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { border: 1px solid var(--line); background: rgba(123,130,255,.08); color: #cbd1ff; border-radius: 100px; padding: 6px 10px; font-size: 12px; }
+.toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px);
+  background: #151b28; border: 1px solid var(--line); color: var(--text);
+  padding: 10px 16px; border-radius: 9px; box-shadow: var(--shadow);
+  opacity: 0; pointer-events: none; transition: .22s ease; font-size: 13px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.loading { display: inline-block; width: 1.5px; height: 1em; background: var(--gold); margin-left: 2px; vertical-align: -2px; animation: blink .8s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (max-width: 1040px) {
   body { overflow: auto; }
-  .workspace { flex-direction: column; overflow: visible; }
-  .left-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--rim); }
-  .panel-scroll { overflow: visible; }
-  .right-panel { overflow: visible; }
-  .output-area { overflow: visible; }
+  .app { min-height: 100%; grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { min-height: 100vh; }
+  .workspace { grid-template-columns: 1fr; }
+  .output-panel { height: auto; min-height: 540px; }
+}
+@media (max-width: 680px) {
+  .topbar { height: auto; padding: 16px; align-items: flex-start; gap: 14px; flex-direction: column; }
+  .actions { width: 100%; }
+  .actions .btn { flex: 1; }
+  .workspace { padding: 12px; }
+  .steps, .result-grid, .pkg-grid, .grid-2 { grid-template-columns: 1fr; }
+  .tabs { gap: 12px; overflow-x: auto; }
+  .tab { flex: 0 0 auto; }
 }
 </style>
 </head>
 <body>
-
-<div class="ambient ambient-1"></div>
-<div class="ambient ambient-2"></div>
-
-<!-- TOPBAR -->
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-name">霓洛 Nilo <em>Agent</em></span>
-  </div>
-  <div class="topbar-right">
-    <div class="status-pill">
-      <div class="pulse-dot"></div>
-      <span>2 agents online</span>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><strong>Nilo</strong><span>爆款口播工作台</span></div>
+    <nav class="nav">
+      <div class="nav-item active"><span class="nav-icon">▦</span>工作台</div>
+      <div class="nav-item"><span class="nav-icon">□</span>素材库</div>
+      <div class="nav-item"><span class="nav-icon">↗</span>爆款库</div>
+      <div class="nav-item"><span class="nav-icon">◎</span>品牌库</div>
+      <div class="nav-item"><span class="nav-icon">≡</span>发布记录</div>
+      <div class="nav-item"><span class="nav-icon">⚙</span>设置</div>
+    </nav>
+    <div class="usage">
+      <div class="usage-label">今日用量</div>
+      <div class="bar"><span></span></div>
+      <strong>38</strong><span class="usage-label"> / 200</span>
+      <button class="upgrade">升级套餐</button>
     </div>
-    <span class="version-tag">v0.1-beta</span>
-  </div>
-</header>
-
-<div class="workspace">
-
-  <!-- LEFT PANEL -->
-  <aside class="left-panel">
-    <div class="panel-scroll">
-
-      <!-- HeyGen Key -->
-      <div class="field-group">
-        <div class="field-label">HeyGen API Key</div>
-        <div class="key-row">
-          <span class="key-icon">⬡</span>
-          <input class="key-input" type="password" id="heygenKey" placeholder="暂跳过，后续填入..." />
-        </div>
-      </div>
-
-      <!-- 主题 -->
-      <div class="field-group">
-        <div class="field-label">口播主题</div>
-        <textarea class="topic-input" id="topicInput" placeholder="输入主题词，例如：普通人如何用AI副业赚到第一个1万..." rows="3"></textarea>
-        <div class="chips">
-          <button class="chip" onclick="setTopic('AI副业赚钱，普通人也能做')">AI副业赚钱</button>
-          <button class="chip" onclick="setTopic('抖音流量密码2025，这3个方法没人告诉你')">抖音流量密码</button>
-          <button class="chip" onclick="setTopic('超级个体时代来了，一个人就是一家公司')">超级个体时代</button>
-          <button class="chip" onclick="setTopic('用AI工具做内容，效率提升10倍的方法')">AI效率工具</button>
-          <button class="chip" onclick="setTopic('数字人口播是什么，普通人能用吗')">数字人科普</button>
-        </div>
-      </div>
-
-      <!-- 配置 -->
-      <div class="field-group">
-        <div class="field-label">生产配置</div>
-        <div class="config-grid">
-          <div class="config-item">
-            <label>时长</label>
-            <select class="config-select" id="duration">
-              <option value="60">60 秒</option>
-              <option value="90" selected>90 秒</option>
-              <option value="120">120 秒</option>
-            </select>
-          </div>
-          <div class="config-item">
-            <label>风格</label>
-            <select class="config-select" id="style">
-              <option value="干货分享" selected>干货分享</option>
-              <option value="知识科普">知识科普</option>
-              <option value="故事叙事">故事叙事</option>
-              <option value="对比反差">对比反差</option>
-            </select>
-          </div>
-          <div class="config-item">
-            <label>数字人</label>
-            <select class="config-select" id="avatar">
-              <option value="nilo_default">霓洛 · 默认</option>
-              <option value="nilo_formal">霓洛 · 正装</option>
-            </select>
-          </div>
-          <div class="config-item">
-            <label>平台</label>
-            <select class="config-select" id="platform">
-              <option value="douyin" selected>抖音</option>
-              <option value="kuaishou">快手</option>
-              <option value="all">全平台</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="divider"></div>
-
-    <button class="btn-run" id="btnRun" onclick="startPipeline()">
-      <span class="btn-icon">⚡</span>
-      <span id="btnText">启动流水线</span>
-    </button>
   </aside>
 
-  <!-- RIGHT PANEL -->
-  <main class="right-panel">
+  <main class="main">
+    <header class="topbar">
+      <div class="title">
+        <h1>把对标内容，变成可拍、可卖、可复用的口播执行稿</h1>
+        <p>先拆结构，再按你的产品事实原创仿写；成片、配音和发布作为后续 Worker 接入。</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="sampleBtn">填入示例</button>
+        <button class="btn" id="clearBtn">新建任务</button>
+      </div>
+    </header>
 
-    <!-- AGENT TIMELINE -->
-    <div class="timeline-bar">
-      <div class="tl-step">
-        <div class="tl-node">
-          <div class="tl-circle" id="tc-0">📡</div>
-          <div class="tl-label" id="tl-0">热点提取</div>
-        </div>
-        <div class="tl-line"><div class="tl-line-fill" id="tf-0"></div></div>
-      </div>
-      <div class="tl-step">
-        <div class="tl-node">
-          <div class="tl-circle" id="tc-1">✍️</div>
-          <div class="tl-label" id="tl-1">脚本生成</div>
-        </div>
-        <div class="tl-line"><div class="tl-line-fill" id="tf-1"></div></div>
-      </div>
-      <div class="tl-step">
-        <div class="tl-node">
-          <div class="tl-circle" id="tc-2">🎙️</div>
-          <div class="tl-label" id="tl-2">声音合成</div>
-        </div>
-        <div class="tl-line"><div class="tl-line-fill" id="tf-2"></div></div>
-      </div>
-      <div class="tl-step">
-        <div class="tl-node">
-          <div class="tl-circle" id="tc-3">🎭</div>
-          <div class="tl-label" id="tl-3">数字人</div>
-        </div>
-        <div class="tl-line"><div class="tl-line-fill" id="tf-3"></div></div>
-      </div>
-      <div class="tl-step" style="flex:0">
-        <div class="tl-node">
-          <div class="tl-circle" id="tc-4">🎬</div>
-          <div class="tl-label" id="tl-4">后期</div>
-        </div>
-      </div>
-    </div>
+    <section class="workspace">
+      <div class="left">
+        <div class="panel input-panel">
+          <div class="panel-head">
+            <div><h2>任务输入</h2><small>对标内容 + 产品事实</small></div>
+            <small id="saveState">未保存</small>
+          </div>
+          <div class="input-scroll">
+            <div class="field">
+              <div class="label-row"><label for="referenceInput">对标内容</label><span class="counter" id="referenceCount">0/4000</span></div>
+              <textarea id="referenceInput" placeholder="粘贴对标视频文案、抖音链接旁的分享文本，或你已经转写好的口播原文。V1 先做结构学习，不直接搬运原文。"></textarea>
+              <div class="hint">建议包含：开头钩子、口播正文、评论区高频问题或你观察到的爆点。</div>
+            </div>
 
-    <!-- OUTPUT AREA -->
-    <div class="output-area" id="outputArea">
+            <div class="field">
+              <div class="label-row"><label for="factsInput">产品事实</label><span class="counter" id="factsCount">0/3000</span></div>
+              <textarea id="factsInput" placeholder="输入你的产品/服务事实：名称、卖点、适用人群、价格、优惠、证明材料、不能说的话。模型只基于这里生成，不编造功效。"></textarea>
+            </div>
 
-      <!-- 空状态 -->
-      <div class="empty-state" id="emptyState">
-        <div class="empty-glyph">N</div>
-        <div class="empty-text">输入主题词，启动流水线</div>
-      </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="toneSelect">人设语气</label>
+                <select id="toneSelect">
+                  <option value="理性干货型">理性干货型</option>
+                  <option value="老板IP型">老板IP型</option>
+                  <option value="朋友聊天型">朋友聊天型</option>
+                  <option value="测评种草型">测评种草型</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="durationSelect">目标时长</label>
+                <select id="durationSelect">
+                  <option value="45秒">45秒</option>
+                  <option value="60秒" selected>60秒</option>
+                  <option value="90秒">90秒</option>
+                  <option value="120秒">120秒</option>
+                </select>
+              </div>
+            </div>
 
-      <!-- 进度卡 -->
-      <div class="progress-card" id="progressCard">
-        <div class="progress-card-header">
-          <span class="progress-card-title">智能体运行状态</span>
-          <span class="progress-pct" id="pctText">0%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="agent-rows">
-          <div class="agent-row" id="ar-0">
-            <div class="agent-dot"></div>
-            <div class="agent-row-name">Agent 1 · 热点文案提取</div>
-            <div class="agent-row-status" id="ars-0">待机</div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="platformSelect">发布平台</label>
+                <select id="platformSelect">
+                  <option value="抖音">抖音</option>
+                  <option value="视频号">视频号</option>
+                  <option value="小红书">小红书</option>
+                  <option value="全平台通用">全平台通用</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="goalSelect">内容目标</label>
+                <select id="goalSelect">
+                  <option value="引流获客">引流获客</option>
+                  <option value="带货转化">带货转化</option>
+                  <option value="账号涨粉">账号涨粉</option>
+                  <option value="品牌认知">品牌认知</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>参考资料（后续接入）</label>
+              <div class="upload-box">上传视频、商品图、授权声音样本将在 V2 接入；当前版本先完成文案闭环。</div>
+            </div>
           </div>
-          <div class="agent-row" id="ar-1">
-            <div class="agent-dot"></div>
-            <div class="agent-row-name">Agent 2 · 霓洛口播脚本</div>
-            <div class="agent-row-status" id="ars-1">待机</div>
-          </div>
-          <div class="agent-row" id="ar-2">
-            <div class="agent-dot"></div>
-            <div class="agent-row-name">Agent 3 · CosyVoice 声音</div>
-            <div class="agent-row-status" id="ars-2">待机</div>
-          </div>
-          <div class="agent-row" id="ar-3">
-            <div class="agent-dot"></div>
-            <div class="agent-row-name">Agent 4 · HeyGen 数字人</div>
-            <div class="agent-row-status" id="ars-3">待机</div>
-          </div>
-          <div class="agent-row" id="ar-4">
-            <div class="agent-dot"></div>
-            <div class="agent-row-name">Agent 5 · FFmpeg 后期合成</div>
-            <div class="agent-row-status" id="ars-4">待机</div>
+          <div class="input-actions">
+            <button class="btn gold" id="analyzeBtn">拆解爆款结构</button>
+            <button class="btn primary" id="scriptBtn">生成仿写脚本</button>
+            <button class="btn" id="packageBtn">生成发布包</button>
           </div>
         </div>
       </div>
 
-      <!-- 脚本输出卡 -->
-      <div class="out-card" id="scriptCard">
-        <div class="out-card-header">
-          <div class="out-card-label">
-            <div class="out-card-label-dot"></div>
-            口播脚本
-          </div>
-          <div class="out-card-actions">
-            <button class="btn-sm" onclick="copyText('scriptRaw', '脚本已复制')">复制全文</button>
-          </div>
+      <div class="right">
+        <div class="steps">
+          <div class="step active" id="step1"><div class="step-num">1</div><div><strong>拆解爆款结构</strong><span>抽象钩子、痛点、节奏和转化逻辑</span></div></div>
+          <div class="step" id="step2"><div class="step-num">2</div><div><strong>生成原创脚本</strong><span>基于你的产品事实输出多版本口播</span></div></div>
+          <div class="step" id="step3"><div class="step-num">3</div><div><strong>发布执行包</strong><span>标题、封面、标签、评论区引导</span></div></div>
+          <div class="step" id="step4"><div class="step-num">4</div><div><strong>成片与发布</strong><span>V2 接 TTS、数字人、FFmpeg 和审核</span></div></div>
         </div>
-        <div class="out-card-body" id="scriptBody">
-          <div id="scriptOutput"></div>
-          <textarea id="scriptRaw" style="display:none"></textarea>
+
+        <div class="panel output-panel">
+          <div class="tabs">
+            <button class="tab active" data-tab="analysis">爆款拆解</button>
+            <button class="tab" data-tab="scripts">仿写脚本</button>
+            <button class="tab" data-tab="package">发布包</button>
+          </div>
+          <div class="output-toolbar">
+            <div class="status" id="runStatus">状态：<b>等待输入</b></div>
+            <button class="copy-btn" id="copyActiveBtn">复制当前结果</button>
+          </div>
+          <div class="output-scroll">
+            <section class="tab-pane" id="analysisPane">
+              <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容和产品事实后，点击“拆解爆款结构”。</div></div>
+              <div class="result-grid" id="analysisResult" style="display:none">
+                <div class="result-card"><h3>结构拆解 <button class="copy-btn" data-copy="analysisStructure">复制</button></h3><div class="output-text" id="analysisStructure"></div></div>
+                <div class="result-card"><h3>原文节奏与可迁移模板 <button class="copy-btn" data-copy="analysisTemplate">复制</button></h3><div class="output-text" id="analysisTemplate"></div></div>
+              </div>
+            </section>
+
+            <section class="tab-pane" id="scriptsPane" style="display:none">
+              <div class="empty" id="scriptsEmpty"><div><strong>脚本会在这里生成</strong>建议先完成爆款拆解，再生成 3 个原创版本。</div></div>
+              <div class="script-list" id="scriptsResult" style="display:none"></div>
+            </section>
+
+            <section class="tab-pane" id="packagePane" style="display:none">
+              <div class="empty" id="packageEmpty"><div><strong>发布包还没生成</strong>生成脚本后，再输出标题、封面文案、标签和执行清单。</div></div>
+              <div class="pkg-grid" id="packageResult" style="display:none">
+                <div class="result-card"><h3>标题与封面 <button class="copy-btn" data-copy="titlesOutput">复制</button></h3><div class="output-text" id="titlesOutput"></div></div>
+                <div class="result-card"><h3>标签与评论区 <button class="copy-btn" data-copy="tagsOutput">复制</button></h3><div class="output-text" id="tagsOutput"></div></div>
+                <div class="result-card"><h3>拍摄执行清单 <button class="copy-btn" data-copy="shotOutput">复制</button></h3><div class="output-text" id="shotOutput"></div></div>
+                <div class="result-card"><h3>合规提醒 <button class="copy-btn" data-copy="riskOutput">复制</button></h3><div class="output-text" id="riskOutput"></div></div>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
-
-      <!-- 发布文案卡 -->
-      <div class="out-card" id="publishCard">
-        <div class="out-card-header">
-          <div class="out-card-label">
-            <div class="out-card-label-dot" style="background:var(--indigo)"></div>
-            发布文案 & 标签
-          </div>
-          <div class="out-card-actions">
-            <button class="btn-sm" onclick="copyText('publishRaw', '发布文案已复制')">复制</button>
-          </div>
-        </div>
-        <div class="out-card-body">
-          <div class="publish-text" id="publishOutput"></div>
-          <textarea id="publishRaw" style="display:none"></textarea>
-        </div>
-      </div>
-
-    </div>
+    </section>
   </main>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-const state = { topic:'', duration:90, style:'干货分享', script:'', trendData:'', running:false };
+const state = {
+  analysis: '',
+  template: '',
+  scripts: '',
+  pkg: '',
+  activeTab: 'analysis',
+  running: false
+};
 
-function setTopic(t) {
-  document.getElementById('topicInput').value = t;
-}
+const $ = (id) => document.getElementById(id);
+const tabs = Array.from(document.querySelectorAll('.tab'));
+const panes = {
+  analysis: $('analysisPane'),
+  scripts: $('scriptsPane'),
+  package: $('packagePane')
+};
 
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
+function toast(message) {
+  const el = $('toast');
+  el.textContent = message;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-function copyText(id, msg) {
-  const val = document.getElementById(id).value;
-  navigator.clipboard.writeText(val).then(() => showToast('✓ ' + msg));
+function setStatus(text, busy = false) {
+  $('runStatus').innerHTML = `状态：<b>${text}</b>${busy ? '<span class="loading"></span>' : ''}`;
 }
 
-// Timeline
-function setTC(i, cls) {
-  document.getElementById(`tc-${i}`).className = `tl-circle ${cls}`;
-  document.getElementById(`tl-${i}`).className = `tl-label ${cls}`;
+function updateCounts() {
+  $('referenceCount').textContent = `${$('referenceInput').value.length}/4000`;
+  $('factsCount').textContent = `${$('factsInput').value.length}/3000`;
+  $('saveState').textContent = '已自动保存';
+  localStorage.setItem('nilo_viral_workbench_v1', JSON.stringify(getInput()));
 }
 
-function fillLine(i) {
-  if (i < 4) document.getElementById(`tf-${i}`).style.width = '100%';
+function getInput() {
+  return {
+    reference: $('referenceInput').value.trim(),
+    facts: $('factsInput').value.trim(),
+    tone: $('toneSelect').value,
+    duration: $('durationSelect').value,
+    platform: $('platformSelect').value,
+    goal: $('goalSelect').value
+  };
 }
 
-// Agent rows
-function setAR(i, cls, status) {
-  document.getElementById(`ar-${i}`).className = `agent-row ${cls}`;
-  document.getElementById(`ars-${i}`).textContent = status;
+function requireInput() {
+  const input = getInput();
+  if (!input.reference) throw new Error('请先粘贴对标内容或转写文案');
+  if (!input.facts) throw new Error('请填写你的产品事实，避免模型编造');
+  return input;
 }
 
-function setProgress(pct) {
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('pctText').textContent = pct + '%';
+function switchTab(name) {
+  state.activeTab = name;
+  tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === name));
+  Object.entries(panes).forEach(([key, pane]) => pane.style.display = key === name ? '' : 'none');
 }
 
-// DeepSeek API
-const DS_KEY = 'sk-858c1605db944d418149b67d63d9c59b';
-const DS_URL = 'https://api.deepseek.com/v1/chat/completions';
+function setSteps(done) {
+  for (let i = 1; i <= 4; i++) {
+    const el = $(`step${i}`);
+    el.classList.toggle('done', i < done);
+    el.classList.toggle('active', i === done);
+  }
+}
 
-async function callClaude(userPrompt, systemPrompt) {
-  const res = await fetch(DS_URL, {
+function parseTwoSections(text) {
+  const marker = '【可迁移模板】';
+  const idx = text.indexOf(marker);
+  if (idx === -1) return [text, ''];
+  return [text.slice(0, idx).replace('【结构拆解】', '').trim(), text.slice(idx + marker.length).trim()];
+}
+
+function splitScripts(text) {
+  const parts = text.split(/(?=【版本[一二三123].*?】)/g).map(s => s.trim()).filter(Boolean);
+  return parts.length ? parts : [text];
+}
+
+function parsePackage(text) {
+  const grab = (title, nextTitles) => {
+    const start = text.indexOf(title);
+    if (start === -1) return '';
+    const from = start + title.length;
+    const next = nextTitles.map(t => text.indexOf(t, from)).filter(i => i >= 0).sort((a,b) => a-b)[0];
+    return text.slice(from, next || text.length).trim();
+  };
+  return {
+    titles: grab('【标题与封面】', ['【标签与评论区】','【拍摄执行清单】','【合规提醒】']),
+    tags: grab('【标签与评论区】', ['【拍摄执行清单】','【合规提醒】']),
+    shot: grab('【拍摄执行清单】', ['【合规提醒】']),
+    risk: grab('【合规提醒】', [])
+  };
+}
+
+async function callAI(messages, onChunk) {
+  const res = await fetch('/api/chat', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + DS_KEY
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'deepseek-chat',
-      max_tokens: 1000,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ]
-    })
-  });
-  if (!res.ok) throw new Error('DeepSeek ' + res.status);
-  const d = await res.json();
-  return d.choices?.[0]?.message?.content || '';
-}
-
-async function callClaudeStream(userPrompt, systemPrompt, onChunk) {
-  const res = await fetch(DS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + DS_KEY
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      max_tokens: 1000,
+      temperature: 0.65,
+      max_tokens: 1800,
       stream: true,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ]
+      messages
     })
   });
-  if (!res.ok) throw new Error('DeepSeek ' + res.status);
-
+  if (!res.ok) throw new Error(`AI 请求失败：${res.status}`);
   const reader = res.body.getReader();
-  const dec = new TextDecoder();
+  const decoder = new TextDecoder();
+  let buffer = '';
   let full = '';
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    const lines = dec.decode(value).split('\n').filter(l => l.startsWith('data: '));
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
     for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const raw = trimmed.slice(5).trim();
+      if (!raw || raw === '[DONE]') continue;
       try {
-        const raw = line.slice(6);
-        if (raw === '[DONE]') continue;
-        const d = JSON.parse(raw);
-        const delta = d.choices?.[0]?.delta?.content;
+        const data = JSON.parse(raw);
+        const delta = data.choices?.[0]?.delta?.content || data.choices?.[0]?.message?.content || '';
         if (delta) {
           full += delta;
-          onChunk(full);
+          onChunk?.(full);
         }
-      } catch(e) {}
+      } catch (_) {}
     }
   }
   return full;
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// Render script segments
-function renderScript(text) {
-  const el = document.getElementById('scriptOutput');
-  document.getElementById('scriptRaw').value = text;
-  const parts = text.split(/【(.+?)】/).filter(s => s.trim());
-  let html = '';
-  for (let i = 0; i < parts.length; i += 2) {
-    const tag = parts[i]?.trim();
-    const body = parts[i+1]?.trim();
-    if (tag && body) {
-      html += `<div class="script-block"><div class="script-block-tag">${tag}</div><div class="script-block-text">${body}</div></div>`;
-    } else if (tag) {
-      html += `<div class="script-block"><div class="script-block-text">${tag}</div></div>`;
-    }
-  }
-  el.innerHTML = html || `<div class="script-block"><div class="script-block-text">${text}</div></div>`;
+function analysisPrompt(input) {
+  return [
+    { role: 'system', content: '你是短视频爆款口播编导和合规顾问。只提取结构，不洗稿，不复刻他人可识别表达。输出必须清晰、可执行。' },
+    { role: 'user', content: `请拆解下面的对标口播内容，并把它转成可迁移模板。\n\n对标内容：\n${input.reference}\n\n我的产品事实：\n${input.facts}\n\n发布平台：${input.platform}\n内容目标：${input.goal}\n\n请严格按以下格式输出：\n【结构拆解】\n1. 内容类型：\n2. 开头钩子：\n3. 用户痛点：\n4. 信任建立：\n5. 转折/冲突：\n6. 卖点顺序：\n7. 行动召唤：\n8. 不可直接复用的风险表达：\n\n【可迁移模板】\n用 5-7 个步骤描述这条视频的结构模板。每一步包含：时间段、目的、可替换写法、注意事项。` }
+  ];
 }
 
-// ── PIPELINE ──
-async function startPipeline() {
-  state.topic = document.getElementById('topicInput').value.trim();
-  state.duration = document.getElementById('duration').value;
-  state.style = document.getElementById('style').value;
+function scriptsPrompt(input) {
+  return [
+    { role: 'system', content: '你是原创口播脚本编导。基于对标结构学习，但必须换表达、换论证链、换场景，不得逐句改写。只使用用户提供的产品事实。' },
+    { role: 'user', content: `基于以下信息，生成 3 个原创口播脚本版本。\n\n对标结构拆解：\n${state.analysis}\n\n可迁移模板：\n${state.template}\n\n产品事实：\n${input.facts}\n\n人设语气：${input.tone}\n目标时长：${input.duration}\n平台：${input.platform}\n目标：${input.goal}\n\n严格输出格式：\n【版本一｜强痛点转化版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本二｜故事共鸣版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本三｜干货信任版】\n口播稿：\n分镜提示：\n字幕重点：\n\n要求：口语化、可直接拍、不要编造资质/销量/功效。` }
+  ];
+}
 
-  if (!state.topic) { showToast('⚠ 请先输入主题词'); return; }
+function packagePrompt(input) {
+  return [
+    { role: 'system', content: '你是短视频发布运营。输出发布执行包，强调真实、可审核、可执行。' },
+    { role: 'user', content: `请根据脚本和产品事实，生成发布执行包。\n\n脚本：\n${state.scripts}\n\n产品事实：\n${input.facts}\n\n平台：${input.platform}\n内容目标：${input.goal}\n\n严格输出格式：\n【标题与封面】\n- 标题候选 5 个：\n- 封面主文案 3 个：\n- 封面副文案 3 个：\n\n【标签与评论区】\n- 话题标签 10 个：\n- 评论区第一条：\n- 置顶互动问题 3 个：\n\n【拍摄执行清单】\n- 镜头：\n- 表情/语速：\n- 字幕：\n- BGM：\n- 素材：\n\n【合规提醒】\n列出这条内容发布前需要人工确认的事实、授权和风险点。` }
+  ];
+}
 
-  // Reset
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('progressCard').classList.add('visible');
-  document.getElementById('scriptCard').classList.remove('visible');
-  document.getElementById('publishCard').classList.remove('visible');
-  document.getElementById('btnRun').disabled = true;
-  document.getElementById('btnText').textContent = '运行中...';
-
-  for (let i = 0; i < 5; i++) { setAR(i, '', '待机'); setTC(i, ''); }
-  for (let i = 0; i < 4; i++) document.getElementById(`tf-${i}`).style.width = '0%';
-  setProgress(0);
-
+async function runAnalysis() {
   try {
-    // Agent 1
-    setTC(0, 'active'); setAR(0, 'running', '运行中...');
-    setProgress(5);
-    const t0 = Date.now();
-    state.trendData = await callClaude(
-      `主题：${state.topic}\n分析该主题在抖音上的爆款规律，给出：\n1. 3个最强开场钩子句式（直接给句子）\n2. 核心用户痛点（1句话）\n3. 评论区高频互动词（3-5个）\n4. 视频节奏结构特征\n格式简洁，直接输出。`,
-      '你是抖音爆款内容分析专家，直接给结果，不要废话。'
-    );
-    const e0 = ((Date.now()-t0)/1000).toFixed(1)+'s';
-    setTC(0, 'done'); fillLine(0); setAR(0, 'done', e0); setProgress(20);
-
-    // Agent 2 - streaming
-    setTC(1, 'active'); setAR(1, 'running', '生成中...');
-    setProgress(25);
-    document.getElementById('scriptCard').classList.add('visible');
-    document.getElementById('scriptOutput').innerHTML = '<span class="stream-cursor"></span>';
-    const t1 = Date.now();
-
-    state.script = await callClaudeStream(
-      `主题：${state.topic}
-热点数据：${state.trendData}
-时长：${state.duration}秒
-风格：${state.style}
-
-你是霓洛Nilo，抖音上的AI时代翻译官，帮普通人看懂AI浪潮中的机会。
-直接输出口播脚本，严格按以下格式：
-
-【开场钩子 0-5秒】
-（强力开场，制造悬念或冲突，1-2句）
-
-【痛点共鸣 5-20秒】
-（戳中用户，让人觉得"说的就是我"）
-
-【核心干货 20-${Math.round(state.duration*0.7)}秒】
-（3个要点，每点1-2句，口语化，有洞察）
-
-【行动收尾 ${Math.round(state.duration*0.7)}-${state.duration}秒】
-（自然引导点赞收藏，不生硬）
-
-要求：完全口语化，总字数约${Math.round(state.duration*3.5)}字，霓洛语气：理性、有洞察、不说废话。`,
-      '你是霓洛Nilo，真实自然，不用营销话术，直接说干货。',
-      (text) => {
-        document.getElementById('scriptOutput').innerHTML =
-          `<div style="white-space:pre-wrap;font-size:14px;line-height:1.9;color:var(--text);font-family:'Noto Sans SC',sans-serif">${text}<span class="stream-cursor"></span></div>`;
-      }
-    );
-    const e1 = ((Date.now()-t1)/1000).toFixed(1)+'s';
-    renderScript(state.script);
-    setTC(1, 'done'); fillLine(1); setAR(1, 'done', e1); setProgress(45);
-
-    // Agent 3 - CosyVoice (待接入)
-    setTC(2, 'active'); setAR(2, 'running', '待接入...');
-    setProgress(50);
-    await sleep(1200);
-    setTC(2, 'done'); fillLine(2); setAR(2, 'done', '待接入 CosyVoice'); setProgress(60);
-
-    // Agent 4 - HeyGen (待接入)
-    setTC(3, 'active'); setAR(3, 'running', '待接入...');
-    setProgress(65);
-    await sleep(1000);
-    setTC(3, 'done'); fillLine(3); setAR(3, 'done', '待接入 HeyGen'); setProgress(75);
-
-    // Agent 5 - 发布文案
-    setTC(4, 'active'); setAR(4, 'running', '生成中...');
-    setProgress(80);
-    const t4 = Date.now();
-    const pub = await callClaude(
-      `基于口播脚本，生成抖音发布配套内容：\n${state.script.slice(0,400)}\n\n输出：\n1. 视频标题 3个选项（含emoji，25字内）\n2. 话题标签 10个\n3. 最佳发布时间\n4. 评论区第一条互动引导语\n直接给内容，格式清晰。`,
-      '你是抖音运营专家。'
-    );
-    const e4 = ((Date.now()-t4)/1000).toFixed(1)+'s';
-    document.getElementById('publishOutput').textContent = pub;
-    document.getElementById('publishRaw').value = pub;
-    document.getElementById('publishCard').classList.add('visible');
-    setTC(4, 'done'); setAR(4, 'done', e4); setProgress(100);
-
-    showToast('✓ 脚本生产完成');
-
-  } catch(err) {
-    showToast('✗ ' + (err.message || '出错了'));
-    console.error(err);
-  }
-
-  document.getElementById('btnRun').disabled = false;
-  document.getElementById('btnText').textContent = '再次生成';
+    const input = requireInput();
+    state.running = true;
+    setStatus('正在拆解', true);
+    setSteps(1);
+    switchTab('analysis');
+    $('analysisEmpty').style.display = 'none';
+    $('analysisResult').style.display = 'grid';
+    $('analysisStructure').textContent = '';
+    $('analysisTemplate').textContent = '';
+    const full = await callAI(analysisPrompt(input), (text) => {
+      const [a, b] = parseTwoSections(text);
+      $('analysisStructure').textContent = a;
+      $('analysisTemplate').textContent = b;
+    });
+    const [a, b] = parseTwoSections(full);
+    state.analysis = a;
+    state.template = b;
+    setSteps(2);
+    setStatus('拆解完成');
+    toast('爆款结构拆解完成');
+  } catch (err) {
+    setStatus('失败');
+    toast(err.message || '拆解失败');
+  } finally { state.running = false; }
 }
+
+async function runScripts() {
+  try {
+    const input = requireInput();
+    if (!state.analysis) await runAnalysis();
+    state.running = true;
+    setStatus('正在生成脚本', true);
+    setSteps(2);
+    switchTab('scripts');
+    $('scriptsEmpty').style.display = 'none';
+    $('scriptsResult').style.display = 'grid';
+    $('scriptsResult').innerHTML = '<div class="script-item"><div class="output-text">生成中<span class="loading"></span></div></div>';
+    const full = await callAI(scriptsPrompt(input), (text) => {
+      $('scriptsResult').innerHTML = splitScripts(text).map((part, idx) => `<div class="script-item"><div class="script-title">版本 ${idx + 1}</div><div class="output-text">${escapeHtml(part)}</div></div>`).join('');
+    });
+    state.scripts = full;
+    setSteps(3);
+    setStatus('脚本完成');
+    toast('3 版原创口播脚本已生成');
+  } catch (err) {
+    setStatus('失败');
+    toast(err.message || '脚本生成失败');
+  } finally { state.running = false; }
+}
+
+async function runPackage() {
+  try {
+    const input = requireInput();
+    if (!state.scripts) await runScripts();
+    state.running = true;
+    setStatus('正在生成发布包', true);
+    setSteps(3);
+    switchTab('package');
+    $('packageEmpty').style.display = 'none';
+    $('packageResult').style.display = 'grid';
+    ['titlesOutput','tagsOutput','shotOutput','riskOutput'].forEach(id => $(id).textContent = '生成中...');
+    const full = await callAI(packagePrompt(input), (text) => {
+      const p = parsePackage(text);
+      $('titlesOutput').textContent = p.titles || text;
+      $('tagsOutput').textContent = p.tags;
+      $('shotOutput').textContent = p.shot;
+      $('riskOutput').textContent = p.risk;
+    });
+    state.pkg = full;
+    const p = parsePackage(full);
+    $('titlesOutput').textContent = p.titles || full;
+    $('tagsOutput').textContent = p.tags;
+    $('shotOutput').textContent = p.shot;
+    $('riskOutput').textContent = p.risk;
+    setSteps(4);
+    setStatus('发布包完成');
+    toast('发布执行包已生成');
+  } catch (err) {
+    setStatus('失败');
+    toast(err.message || '发布包生成失败');
+  } finally { state.running = false; }
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]));
+}
+
+function copyText(text) {
+  if (!text) return toast('没有可复制的内容');
+  navigator.clipboard.writeText(text).then(() => toast('已复制'));
+}
+
+function activeText() {
+  if (state.activeTab === 'analysis') return `【结构拆解】\n${$('analysisStructure').textContent}\n\n【可迁移模板】\n${$('analysisTemplate').textContent}`;
+  if (state.activeTab === 'scripts') return $('scriptsResult').innerText;
+  return $('packageResult').innerText;
+}
+
+function fillSample() {
+  $('referenceInput').value = '今天拆解了一个卖得不错的爆款口播案例。它表面上是一个简单工具，但其实背后是 5 个智能体串起来：先提取对标文案，再仿写，再克隆声音，然后生成数字人口播，最后自动加字幕和发布。普通用户不关心技术细节，只想一键得到结果，所以这个产品真正卖的是把复杂流程打包成可用工具。';
+  $('factsInput').value = '产品名称：Nilo 爆款口播工作台\n核心卖点：把对标视频拆成结构模板，再根据用户自己的产品事实生成原创口播脚本和发布执行包。\n目标用户：短视频运营、老板 IP、电商商家、知识付费团队。\n限制：不承诺保证爆款，不允许洗稿，不克隆未授权声音肖像。';
+  updateCounts();
+  toast('示例已填入');
+}
+
+function clearAll() {
+  ['referenceInput','factsInput'].forEach(id => $(id).value = '');
+  state.analysis = state.template = state.scripts = state.pkg = '';
+  $('analysisEmpty').style.display = '';
+  $('analysisResult').style.display = 'none';
+  $('scriptsEmpty').style.display = '';
+  $('scriptsResult').style.display = 'none';
+  $('packageEmpty').style.display = '';
+  $('packageResult').style.display = 'none';
+  setSteps(1);
+  setStatus('等待输入');
+  updateCounts();
+  toast('已新建任务');
+}
+
+tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+$('analyzeBtn').addEventListener('click', runAnalysis);
+$('scriptBtn').addEventListener('click', runScripts);
+$('packageBtn').addEventListener('click', runPackage);
+$('sampleBtn').addEventListener('click', fillSample);
+$('clearBtn').addEventListener('click', clearAll);
+$('copyActiveBtn').addEventListener('click', () => copyText(activeText()));
+document.addEventListener('click', (event) => {
+  const id = event.target?.dataset?.copy;
+  if (id) copyText($(id).textContent);
+});
+['referenceInput','factsInput','toneSelect','durationSelect','platformSelect','goalSelect'].forEach(id => $(id).addEventListener('input', updateCounts));
+
+try {
+  const saved = JSON.parse(localStorage.getItem('nilo_viral_workbench_v1') || '{}');
+  if (saved.reference) $('referenceInput').value = saved.reference;
+  if (saved.facts) $('factsInput').value = saved.facts;
+  if (saved.tone) $('toneSelect').value = saved.tone;
+  if (saved.duration) $('durationSelect').value = saved.duration;
+  if (saved.platform) $('platformSelect').value = saved.platform;
+  if (saved.goal) $('goalSelect').value = saved.goal;
+} catch (_) {}
+updateCounts();
 </script>
 </body>
 </html>
