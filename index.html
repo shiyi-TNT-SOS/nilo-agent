@@ -170,13 +170,17 @@ textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75);
   font-size: 12px;
 }
 .input-actions {
+  order: -1;
   padding: 12px 18px;
-  border-top: 1px solid var(--line-soft);
-  display: grid; gap: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   flex: 0 0 auto;
   background: rgba(16,21,32,.96);
-  box-shadow: 0 -16px 28px rgba(7,10,16,.36);
+  box-shadow: 0 12px 24px rgba(7,10,16,.22);
 }
+.input-actions .btn { padding: 0 8px; min-width: 0; white-space: nowrap; }
 .steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
