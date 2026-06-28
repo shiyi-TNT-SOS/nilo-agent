@@ -142,7 +142,7 @@ button { border: 0; }
 }
 .panel-head h2 { margin: 0; font-size: 15px; }
 .panel-head small { color: var(--muted); }
-.input-scroll { padding: 18px; overflow: auto; min-height: 0; }
+.input-scroll { padding: 18px; overflow: auto; min-height: 0; flex: 1 1 auto; }
 .field { margin-bottom: 18px; }
 .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
 label { color: #d9deea; font-size: 13px; font-weight: 700; }
@@ -155,7 +155,7 @@ textarea, input, select {
   border-radius: 8px;
   outline: none;
 }
-textarea { min-height: 128px; resize: vertical; padding: 13px 14px; line-height: 1.7; font-size: 13px; }
+textarea { min-height: 112px; resize: vertical; padding: 13px 14px; line-height: 1.7; font-size: 13px; }
 input, select { height: 42px; padding: 0 12px; font-size: 13px; }
 textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75); box-shadow: 0 0 0 3px rgba(123,130,255,.11); }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -163,16 +163,19 @@ textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75);
 .upload-box {
   border: 1px dashed #465064;
   border-radius: 8px;
-  padding: 18px;
+  padding: 12px 14px;
   text-align: center;
   color: var(--muted);
   background: rgba(255,255,255,.025);
   font-size: 12px;
 }
 .input-actions {
-  padding: 16px 18px;
+  padding: 12px 18px;
   border-top: 1px solid var(--line-soft);
   display: grid; gap: 10px;
+  flex: 0 0 auto;
+  background: rgba(16,21,32,.96);
+  box-shadow: 0 -16px 28px rgba(7,10,16,.36);
 }
 .steps {
   display: grid;
