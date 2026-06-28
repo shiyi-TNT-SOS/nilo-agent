@@ -2,27 +2,41 @@ const { Readable } = require('node:stream');
 
 const DEFAULT_BASE_URL = 'https://api.deepseek.com';
 const DEFAULT_MODEL = 'deepseek-chat';
+const DEFAULT_MAX_INPUT_CHARS = 12000;
+const DEFAULT_MAX_OUTPUT_TOKENS = 2200;
+const DEFAULT_TIMEOUT_MS = 45000;
+const ALLOWED_ROLES = new Set(['system', 'user', 'assistant']);
 
 function cleanEnv(value) {
   return String(value || '').replace(/^\uFEFF/, '').trim();
 }
 
-function setCors(req, res) {
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+function parseAllowedOrigins() {
+  return cleanEnv(process.env.ALLOWED_ORIGINS)
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+function setCors(req, res) {
+  const allowedOrigins = parseAllowedOrigins();
   const origin = req.headers.origin;
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (!allowedOrigins.length) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-  } else if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
+    return true;
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    return true;
+  }
+
+  return false;
 }
 
 function readBody(req) {
@@ -40,39 +54,83 @@ function readBody(req) {
   });
 }
 
+function fail(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  throw error;
+}
+
 function normalizePayload(rawBody) {
-  const maxChars = Number(process.env.MAX_INPUT_CHARS || 12000);
+  const maxChars = Number(cleanEnv(process.env.MAX_INPUT_CHARS) || DEFAULT_MAX_INPUT_CHARS);
   rawBody = String(rawBody || '').replace(/^\uFEFF/, '');
   if (rawBody.length > maxChars) {
-    const error = new Error(`Request body too large. Max ${maxChars} characters.`);
-    error.statusCode = 413;
-    throw error;
+    fail(413, `Request body too large. Max ${maxChars} characters.`);
   }
 
-  let payload;
+  let input;
   try {
-    payload = JSON.parse(rawBody || '{}');
+    input = JSON.parse(rawBody || '{}');
   } catch (_) {
-    const error = new Error('Invalid JSON body');
-    error.statusCode = 400;
-    throw error;
+    fail(400, 'Invalid JSON body');
   }
 
-  if (!Array.isArray(payload.messages) || !payload.messages.length) {
-    const error = new Error('messages is required');
-    error.statusCode = 400;
-    throw error;
+  if (!Array.isArray(input.messages) || !input.messages.length) {
+    fail(400, 'messages is required');
+  }
+  if (input.messages.length > 8) {
+    fail(400, 'Too many messages');
   }
 
-  payload.model = cleanEnv(process.env.DS_MODEL) || payload.model || DEFAULT_MODEL;
-  return JSON.stringify(payload);
+  let contentChars = 0;
+  const messages = input.messages.map((message) => {
+    const role = String(message?.role || '').trim();
+    const content = String(message?.content || '').trim();
+    if (!ALLOWED_ROLES.has(role)) fail(400, 'Invalid message role');
+    if (!content) fail(400, 'Message content is required');
+    if (content.length > 6000) fail(400, 'Single message is too long');
+    contentChars += content.length;
+    return { role, content };
+  });
+
+  if (contentChars > maxChars) {
+    fail(413, `Message content too large. Max ${maxChars} characters.`);
+  }
+
+  const maxOutputTokens = Number(cleanEnv(process.env.MAX_OUTPUT_TOKENS) || DEFAULT_MAX_OUTPUT_TOKENS);
+  const requestedMaxTokens = Number(input.max_tokens || 1800);
+  const maxTokens = Math.min(Math.max(Number.isFinite(requestedMaxTokens) ? requestedMaxTokens : 1800, 1), maxOutputTokens);
+  const requestedTemperature = Number(input.temperature ?? 0.65);
+  const temperature = Math.min(Math.max(Number.isFinite(requestedTemperature) ? requestedTemperature : 0.65, 0), 1);
+
+  return JSON.stringify({
+    model: cleanEnv(process.env.DS_MODEL) || DEFAULT_MODEL,
+    messages,
+    stream: Boolean(input.stream),
+    max_tokens: maxTokens,
+    temperature,
+  });
+}
+
+function pipeWebStream(webStream, res) {
+  return new Promise((resolve, reject) => {
+    const nodeStream = Readable.fromWeb(webStream);
+    nodeStream.on('error', reject);
+    res.on('error', reject);
+    res.on('finish', resolve);
+    nodeStream.pipe(res);
+  });
 }
 
 module.exports = async function handler(req, res) {
-  setCors(req, res);
+  const corsAllowed = setCors(req, res);
 
   if (req.method === 'OPTIONS') {
-    res.status(204).end();
+    res.status(corsAllowed ? 204 : 403).end();
+    return;
+  }
+
+  if (!corsAllowed) {
+    res.status(403).json({ error: 'Origin not allowed' });
     return;
   }
 
@@ -89,8 +147,9 @@ module.exports = async function handler(req, res) {
   }
 
   const controller = new AbortController();
-  const timeoutMs = Number(process.env.CHAT_TIMEOUT_MS || 45000);
+  const timeoutMs = Number(cleanEnv(process.env.CHAT_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS);
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  req.on('aborted', () => controller.abort());
 
   try {
     const rawBody = await readBody(req);
@@ -116,14 +175,18 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    Readable.fromWeb(upstream.body).pipe(res);
+    await pipeWebStream(upstream.body, res);
   } catch (error) {
     const isAbort = error.name === 'AbortError';
     const statusCode = error.statusCode || (isAbort ? 504 : 502);
-    res.status(statusCode).json({
-      error: isAbort ? 'DeepSeek request timed out' : 'DeepSeek request failed',
-      message: error.message,
-    });
+    if (!res.headersSent) {
+      res.status(statusCode).json({
+        error: isAbort ? 'DeepSeek request timed out' : 'DeepSeek request failed',
+        message: error.message,
+      });
+    } else {
+      res.end();
+    }
   } finally {
     clearTimeout(timeout);
   }

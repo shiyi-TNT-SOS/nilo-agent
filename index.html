@@ -242,6 +242,9 @@ textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75);
   opacity: 0; pointer-events: none; transition: .22s ease; font-size: 13px;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.error-panel { display: none; margin-bottom: 16px; padding: 14px 16px; border: 1px solid rgba(255,110,90,.35); background: rgba(255,110,90,.08); color: #ffd2ca; border-radius: 8px; font-size: 13px; line-height: 1.7; }
+.error-panel strong { display: block; color: #fff; margin-bottom: 4px; }
+.error-panel button { margin-top: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: var(--text); border-radius: 6px; padding: 7px 10px; cursor: pointer; }
 .loading { display: inline-block; width: 1.5px; height: 1em; background: var(--gold); margin-left: 2px; vertical-align: -2px; animation: blink .8s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 @media (max-width: 1040px) {
@@ -389,6 +392,7 @@ textarea:focus, input:focus, select:focus { border-color: rgba(123,130,255,.75);
           </div>
           <div class="output-scroll">
             <section class="tab-pane" id="analysisPane">
+              <div class="error-panel" id="errorPanel"><strong>生成失败</strong><span id="errorText"></span><br><button id="retryBtn">重试上一步</button></div>
               <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容和产品事实后，点击“拆解爆款结构”。</div></div>
               <div class="result-grid" id="analysisResult" style="display:none">
                 <div class="result-card"><h3>结构拆解 <button class="copy-btn" data-copy="analysisStructure">复制</button></h3><div class="output-text" id="analysisStructure"></div></div>
@@ -425,7 +429,8 @@ const state = {
   scripts: '',
   pkg: '',
   activeTab: 'analysis',
-  running: false
+  running: false,
+  lastAction: null
 };
 
 const $ = (id) => document.getElementById(id);
@@ -445,6 +450,23 @@ function toast(message) {
 
 function setStatus(text, busy = false) {
   $('runStatus').innerHTML = `状态：<b>${text}</b>${busy ? '<span class="loading"></span>' : ''}`;
+}
+
+function setRunning(isRunning) {
+  state.running = isRunning;
+  ['analyzeBtn','scriptBtn','packageBtn','sampleBtn','clearBtn'].forEach(id => {
+    $(id).disabled = isRunning;
+  });
+}
+
+function showError(message) {
+  $('errorText').textContent = message || '请稍后重试';
+  $('errorPanel').style.display = 'block';
+}
+
+function clearError() {
+  $('errorPanel').style.display = 'none';
+  $('errorText').textContent = '';
 }
 
 function updateCounts() {
@@ -469,6 +491,8 @@ function requireInput() {
   const input = getInput();
   if (!input.reference) throw new Error('请先粘贴对标内容或转写文案');
   if (!input.facts) throw new Error('请填写你的产品事实，避免模型编造');
+  if (input.reference.length > 4000) throw new Error('对标内容超过 4000 字，请先压缩后再生成');
+  if (input.facts.length > 3000) throw new Error('产品事实超过 3000 字，请先压缩后再生成');
   return input;
 }
 
@@ -526,7 +550,15 @@ async function callAI(messages, onChunk) {
       messages
     })
   });
-  if (!res.ok) throw new Error(`AI 请求失败：${res.status}`);
+  if (!res.ok) {
+    let detail = '';
+    try {
+      const body = await res.json();
+      detail = body?.error || body?.message || '';
+    } catch (_) {}
+    throw new Error(`AI 请求失败：${res.status}${detail ? '，' + detail : ''}`);
+  }
+  if (!res.body) throw new Error('当前浏览器不支持流式响应');
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -576,10 +608,14 @@ function packagePrompt(input) {
   ];
 }
 
-async function runAnalysis() {
+async function runAnalysis(options = {}) {
+  const bubble = Boolean(options.bubble);
+  if (state.running) return;
+  state.lastAction = 'analysis';
+  clearError();
   try {
     const input = requireInput();
-    state.running = true;
+    setRunning(true);
     setStatus('正在拆解', true);
     setSteps(1);
     switchTab('analysis');
@@ -600,15 +636,22 @@ async function runAnalysis() {
     toast('爆款结构拆解完成');
   } catch (err) {
     setStatus('失败');
+    showError(err.message || '拆解失败');
     toast(err.message || '拆解失败');
-  } finally { state.running = false; }
+    if (bubble) throw err;
+  } finally { setRunning(false); }
 }
 
-async function runScripts() {
+async function runScripts(options = {}) {
+  const bubble = Boolean(options.bubble);
+  if (state.running) return;
+  state.lastAction = 'scripts';
+  clearError();
   try {
     const input = requireInput();
-    if (!state.analysis) await runAnalysis();
-    state.running = true;
+    if (!state.analysis) await runAnalysis({ bubble: true });
+    if (!state.analysis) throw new Error('拆解未完成，已停止生成脚本');
+    setRunning(true);
     setStatus('正在生成脚本', true);
     setSteps(2);
     switchTab('scripts');
@@ -624,15 +667,22 @@ async function runScripts() {
     toast('3 版原创口播脚本已生成');
   } catch (err) {
     setStatus('失败');
+    showError(err.message || '脚本生成失败');
     toast(err.message || '脚本生成失败');
-  } finally { state.running = false; }
+    if (bubble) throw err;
+  } finally { setRunning(false); }
 }
 
-async function runPackage() {
+async function runPackage(options = {}) {
+  const bubble = Boolean(options.bubble);
+  if (state.running) return;
+  state.lastAction = 'package';
+  clearError();
   try {
     const input = requireInput();
-    if (!state.scripts) await runScripts();
-    state.running = true;
+    if (!state.scripts) await runScripts({ bubble: true });
+    if (!state.scripts) throw new Error('脚本未完成，已停止生成发布包');
+    setRunning(true);
     setStatus('正在生成发布包', true);
     setSteps(3);
     switchTab('package');
@@ -657,8 +707,10 @@ async function runPackage() {
     toast('发布执行包已生成');
   } catch (err) {
     setStatus('失败');
+    showError(err.message || '发布包生成失败');
     toast(err.message || '发布包生成失败');
-  } finally { state.running = false; }
+    if (bubble) throw err;
+  } finally { setRunning(false); }
 }
 
 function escapeHtml(str) {
@@ -667,7 +719,7 @@ function escapeHtml(str) {
 
 function copyText(text) {
   if (!text) return toast('没有可复制的内容');
-  navigator.clipboard.writeText(text).then(() => toast('已复制'));
+  navigator.clipboard.writeText(text).then(() => toast('已复制')).catch(() => toast('复制失败，请手动选择复制'));
 }
 
 function activeText() {
@@ -694,7 +746,10 @@ function clearAll() {
   $('packageResult').style.display = 'none';
   setSteps(1);
   setStatus('等待输入');
+  localStorage.removeItem('nilo_viral_workbench_v1');
   updateCounts();
+  localStorage.removeItem('nilo_viral_workbench_v1');
+  clearError();
   toast('已新建任务');
 }
 
@@ -704,7 +759,16 @@ $('scriptBtn').addEventListener('click', runScripts);
 $('packageBtn').addEventListener('click', runPackage);
 $('sampleBtn').addEventListener('click', fillSample);
 $('clearBtn').addEventListener('click', clearAll);
-$('copyActiveBtn').addEventListener('click', () => copyText(activeText()));
+$('copyActiveBtn').addEventListener('click', () => {
+  const text = activeText().trim();
+  if (!text || text === '【结构拆解】\n\n【可迁移模板】') return toast('当前还没有生成结果');
+  copyText(text);
+});
+$('retryBtn').addEventListener('click', () => {
+  if (state.lastAction === 'analysis') runAnalysis().catch(() => {});
+  else if (state.lastAction === 'scripts') runScripts().catch(() => {});
+  else if (state.lastAction === 'package') runPackage().catch(() => {});
+});
 document.addEventListener('click', (event) => {
   const id = event.target?.dataset?.copy;
   if (id) copyText($(id).textContent);
