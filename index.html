@@ -265,7 +265,7 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
   <main class="main">
     <div class="steps">
       <div class="step active" id="step1"><div class="step-num">1</div><div><strong>拆解爆款结构</strong><span>分析对标内容，提炼结构</span></div></div>
-      <div class="step" id="step2"><div class="step-num">2</div><div><strong>生成仿写脚本</strong><span>基于产品事实，生成脚本</span></div></div>
+      <div class="step" id="step2"><div class="step-num">2</div><div><strong>生成仿写脚本</strong><span>基于项目事实，生成脚本</span></div></div>
       <div class="step" id="step3"><div class="step-num">3</div><div><strong>生成发布包</strong><span>生成标题、标签、封面等素材</span></div></div>
       <div class="step" id="step4"><div class="step-num">4</div><div><strong>发布与执行</strong><span>一键发布到平台</span></div></div>
     </div>
@@ -273,7 +273,7 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
     <section class="workspace">
       <div class="left">
         <div class="panel input-panel">
-          <div class="panel-head"><div><h2>任务输入</h2><small>对标内容 + 产品事实</small></div><small id="saveState">未保存</small></div>
+          <div class="panel-head"><div><h2>任务输入</h2><small>对标结构 + 我的项目事实</small></div><small id="saveState">未保存</small></div>
           <div class="input-scroll">
             <div class="field">
               <div class="label-row"><label for="referenceInput">对标内容</label><button class="copy-btn" id="viralLibraryBtn" type="button">从爆款库选择</button></div>
@@ -284,13 +284,14 @@ https://v.douyin.com/xxxxxxxxxxx"></textarea>
             </div>
 
             <div class="field">
-              <div class="label-row"><label for="factsInput">产品事实</label><button class="copy-btn" id="productLibraryBtn" type="button">从产品库选择</button></div>
-              <textarea id="factsInput" maxlength="3000" placeholder="请输入产品核心卖点、功能、使用场景、用户人群等，建议分点
+              <div class="label-row"><label for="factsInput">我的产品/项目事实</label><button class="copy-btn" id="productLibraryBtn" type="button">填入项目示例</button></div>
+              <textarea id="factsInput" maxlength="3000" placeholder="这里填“你要推广/销售/发布的对象”，不是从对标视频里提取。
 
-· 产品名称：Nilo 智能降噪耳机
-· 核心卖点：主动降噪、超长续航、通话清晰
-· 适用场景：通勤、办公、学习、旅行
-· 目标人群：学生、上班族、差旅人群"></textarea>
+· 项目/产品名称：Nilo 爆款口播工作台
+· 目标用户：短视频运营、老板 IP、电商商家、知识付费团队
+· 核心交付：把对标视频结构拆成模板，再生成原创口播脚本和发布包
+· 已有能力：DeepSeek 文案生成、Vercel 在线工作台、历史记录、本地草稿
+· 不能说的话：不承诺保证爆款，不洗稿，不克隆未授权声音/肖像"></textarea>
               <div class="hint"><span></span><span class="counter" id="factsCount">0/3000</span></div>
             </div>
 
@@ -316,7 +317,7 @@ https://v.douyin.com/xxxxxxxxxxx"></textarea>
             <div class="metric-strip" id="metricStrip"><div class="metric"><span>内容类型</span><strong>口播种草</strong></div><div class="metric"><span>目标时长</span><strong>60 秒</strong></div><div class="metric"><span>结构段落</span><strong>5 段</strong></div><div class="metric"><span>合规风险</span><strong>待检查</strong></div><div class="metric"><span>发布平台</span><strong>抖音</strong></div></div>
             <section class="tab-pane" id="analysisPane">
               <div class="error-panel" id="errorPanel"><strong>生成失败</strong><span id="errorText"></span><br><button id="retryBtn">重试上一步</button></div>
-              <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容和产品事实后，点击“开始拆解”。</div></div>
+              <div class="empty" id="analysisEmpty"><div><strong>先拆解，再仿写</strong>粘贴对标内容，并填写你自己的产品/项目事实后，点击“开始拆解”。</div></div>
               <div class="result-grid" id="analysisResult" style="display:none"><div class="result-card"><h3>结构拆解 <button class="copy-btn" data-copy="analysisStructure">复制</button></h3><div class="output-text" id="analysisStructure"></div></div><div class="result-card"><h3>爆款文案与可迁移模板 <button class="copy-btn" data-copy="analysisTemplate">复制</button></h3><div class="output-text" id="analysisTemplate"></div></div></div>
             </section>
             <section class="tab-pane" id="scriptsPane" style="display:none"><div class="empty" id="scriptsEmpty"><div><strong>脚本会在这里生成</strong>完成爆款拆解后，生成 3 个原创版本。</div></div><div class="script-list" id="scriptsResult" style="display:none"></div></section>
@@ -457,9 +458,9 @@ function renderRestoredResults() {
 function requireInput() {
   const input = getInput();
   if (!input.reference) throw new Error('请先粘贴对标内容或转写文案');
-  if (!input.facts) throw new Error('请填写你的产品事实，避免模型编造');
+  if (!input.facts) throw new Error('请填写你自己的产品/项目事实，避免模型编造');
   if (input.reference.length > 4000) throw new Error('对标内容超过 4000 字，请先压缩后再生成');
-  if (input.facts.length > 3000) throw new Error('产品事实超过 3000 字，请先压缩后再生成');
+  if (input.facts.length > 3000) throw new Error('产品/项目事实超过 3000 字，请先压缩后再生成');
   return input;
 }
 
@@ -559,21 +560,21 @@ async function callAI(messages, onChunk) {
 function analysisPrompt(input) {
   return [
     { role: 'system', content: '你是短视频爆款口播编导和合规顾问。只提取结构，不洗稿，不复刻他人可识别表达。输出必须清晰、可执行。' },
-    { role: 'user', content: `请拆解下面的对标口播内容，并把它转成可迁移模板。\n\n对标内容：\n${input.reference}\n\n我的产品事实：\n${input.facts}\n\n发布平台：${input.platform}\n内容目标：${input.goal}\n\n请严格按以下格式输出：\n【结构拆解】\n1. 内容类型：\n2. 开头钩子：\n3. 用户痛点：\n4. 信任建立：\n5. 转折/冲突：\n6. 卖点顺序：\n7. 行动召唤：\n8. 不可直接复用的风险表达：\n\n【可迁移模板】\n用 5-7 个步骤描述这条视频的结构模板。每一步包含：时间段、目的、可替换写法、注意事项。` }
+    { role: 'user', content: `请拆解下面的对标口播内容，并把它转成可迁移模板。\n\n对标内容：\n${input.reference}\n\n我的产品/项目事实（不是对标视频内容）：\n${input.facts}\n\n发布平台：${input.platform}\n内容目标：${input.goal}\n\n请严格按以下格式输出：\n【结构拆解】\n1. 内容类型：\n2. 开头钩子：\n3. 用户痛点：\n4. 信任建立：\n5. 转折/冲突：\n6. 卖点顺序：\n7. 行动召唤：\n8. 不可直接复用的风险表达：\n\n【可迁移模板】\n用 5-7 个步骤描述这条视频的结构模板。每一步包含：时间段、目的、可替换写法、注意事项。` }
   ];
 }
 
 function scriptsPrompt(input) {
   return [
-    { role: 'system', content: '你是原创口播脚本编导。基于对标结构学习，但必须换表达、换论证链、换场景，不得逐句改写。只使用用户提供的产品事实。' },
-    { role: 'user', content: `基于以下信息，生成 3 个原创口播脚本版本。\n\n对标结构拆解：\n${state.analysis}\n\n可迁移模板：\n${state.template}\n\n产品事实：\n${input.facts}\n\n人设语气：${input.tone}\n目标时长：${input.duration}\n平台：${input.platform}\n目标：${input.goal}\n\n严格输出格式：\n【版本一｜强痛点转化版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本二｜故事共鸣版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本三｜干货信任版】\n口播稿：\n分镜提示：\n字幕重点：\n\n要求：口语化、可直接拍、不要编造资质/销量/功效。` }
+    { role: 'system', content: '你是原创口播脚本编导。基于对标结构学习，但必须换表达、换论证链、换场景，不得逐句改写。只使用用户提供的产品/项目事实。' },
+    { role: 'user', content: `基于以下信息，生成 3 个原创口播脚本版本。\n\n对标结构拆解：\n${state.analysis}\n\n可迁移模板：\n${state.template}\n\n产品/项目事实：\n${input.facts}\n\n人设语气：${input.tone}\n目标时长：${input.duration}\n平台：${input.platform}\n目标：${input.goal}\n\n严格输出格式：\n【版本一｜强痛点转化版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本二｜故事共鸣版】\n口播稿：\n分镜提示：\n字幕重点：\n\n【版本三｜干货信任版】\n口播稿：\n分镜提示：\n字幕重点：\n\n要求：口语化、可直接拍、不要编造资质/销量/功效。` }
   ];
 }
 
 function packagePrompt(input) {
   return [
     { role: 'system', content: '你是短视频发布运营。输出发布执行包，强调真实、可审核、可执行。' },
-    { role: 'user', content: `请根据脚本和产品事实，生成发布执行包。\n\n脚本：\n${state.scripts}\n\n产品事实：\n${input.facts}\n\n平台：${input.platform}\n内容目标：${input.goal}\n\n严格输出格式：\n【标题与封面】\n- 标题候选 5 个：\n- 封面主文案 3 个：\n- 封面副文案 3 个：\n\n【标签与评论区】\n- 话题标签 10 个：\n- 评论区第一条：\n- 置顶互动问题 3 个：\n\n【拍摄执行清单】\n- 镜头：\n- 表情/语速：\n- 字幕：\n- BGM：\n- 素材：\n\n【合规提醒】\n列出这条内容发布前需要人工确认的事实、授权和风险点。` }
+    { role: 'user', content: `请根据脚本和产品/项目事实，生成发布执行包。\n\n脚本：\n${state.scripts}\n\n产品/项目事实：\n${input.facts}\n\n平台：${input.platform}\n内容目标：${input.goal}\n\n严格输出格式：\n【标题与封面】\n- 标题候选 5 个：\n- 封面主文案 3 个：\n- 封面副文案 3 个：\n\n【标签与评论区】\n- 话题标签 10 个：\n- 评论区第一条：\n- 置顶互动问题 3 个：\n\n【拍摄执行清单】\n- 镜头：\n- 表情/语速：\n- 字幕：\n- BGM：\n- 素材：\n\n【合规提醒】\n列出这条内容发布前需要人工确认的事实、授权和风险点。` }
   ];
 }
 
@@ -701,10 +702,10 @@ function activeText() {
 }
 
 const sampleReference = '今天拆解了一个卖得不错的爆款口播案例。它表面上是一个简单工具，但其实背后是 5 个智能体串起来：先提取对标文案，再仿写，再克隆声音，然后生成数字人口播，最后自动加字幕和发布。普通用户不关心技术细节，只想一键得到结果，所以这个产品真正卖的是把复杂流程打包成可用工具。';
-const sampleFacts = '产品名称：Nilo 爆款口播工作台\n核心卖点：把对标视频拆成结构模板，再根据用户自己的产品事实生成原创口播脚本和发布执行包。\n目标用户：短视频运营、老板 IP、电商商家、知识付费团队。\n限制：不承诺保证爆款，不允许洗稿，不克隆未授权声音肖像。';
+const sampleFacts = '项目/产品名称：Nilo 爆款口播工作台\n目标用户：短视频运营、老板 IP、电商商家、知识付费团队\n核心交付：输入对标内容和自己的产品/项目事实，输出爆款结构拆解、原创口播脚本、标题封面、标签和发布执行包\n已有能力：Vercel 在线工作台、DeepSeek 中转接口、本地草稿、历史记录、爆款库/产品库示例填充\n后续能力：接入视频转写、声音合成、数字人、FFmpeg 成片和发布审核\n限制：不承诺保证爆款，不洗稿，不克隆未授权声音或肖像，不编造功效和资质。';
 function fillSample() { $('referenceInput').value = sampleReference; $('factsInput').value = sampleFacts; updateCounts(); toast('示例已填入'); }
 function fillViralPreset() { $('referenceInput').value = sampleReference; updateCounts(); toast('已填入爆款库示例'); }
-function fillProductPreset() { $('factsInput').value = sampleFacts; updateCounts(); toast('已填入产品库示例'); }
+function fillProductPreset() { $('factsInput').value = sampleFacts; updateCounts(); toast('已填入我的项目事实示例'); }
 
 function clearAll() {
   ['referenceInput','factsInput'].forEach(id => $(id).value = '');
@@ -748,9 +749,9 @@ function handleNav(name) {
   if (name === 'workbench') { closePanel(); $('historyDrawer').classList.remove('show'); toast('已回到工作台'); return; }
   if (name === 'assets') { showPanel('素材库', '<div class="drawer-card"><strong>参考资料入口已就绪</strong>当前版本支持在输入区保留素材位，视频、商品图、声音样本将在 V2 接入上传与解析。</div>'); return; }
   if (name === 'viral') { fillViralPreset(); showPanel('爆款库', '<div class="drawer-card"><strong>已填入爆款库示例</strong>后续可接入抖音/小红书/视频号链接库，按行业、点赞、评论和发布时间筛选。</div>'); return; }
-  if (name === 'brand') { fillProductPreset(); showPanel('品牌库', '<div class="drawer-card"><strong>已填入产品事实示例</strong>后续可保存品牌语气、禁用词、产品卖点和素材授权信息。</div>'); return; }
+  if (name === 'brand') { fillProductPreset(); showPanel('品牌库', '<div class="drawer-card"><strong>已填入我的项目事实示例</strong>这里保存的是你自己的产品/项目资料，不是对标视频里的产品。后续可接品牌语气、禁用词、素材授权和产品库。</div>'); return; }
   if (name === 'records') { openRecords(); return; }
-  if (name === 'settings') { showPanel('设置', '<div class="drawer-card"><strong>当前配置</strong>模型通过 Vercel 环境变量 DS_KEY 调用；前端只访问 /api/chat，不暴露 Key。</div><div class="drawer-card"><strong>生成限制</strong>对标内容 4000 字，产品事实 3000 字，结果自动保存到本地历史。</div>'); return; }
+  if (name === 'settings') { showPanel('设置', '<div class="drawer-card"><strong>当前配置</strong>模型通过 Vercel 环境变量 DS_KEY 调用；前端只访问 /api/chat，不暴露 Key。</div><div class="drawer-card"><strong>生成限制</strong>对标内容 4000 字，产品/项目事实 3000 字，结果自动保存到本地历史。</div>'); return; }
 }
 
 function openUpgrade() {
