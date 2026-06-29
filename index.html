@@ -192,6 +192,15 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
 .loading { display: inline-block; width: 1.5px; height: 1em; background: var(--gold); margin-left: 2px; vertical-align: -2px; animation: blink .8s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
+.nav-item { border: 0; width: 100%; text-align: left; background: transparent; cursor: pointer; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,.035); }
+.operator { width: calc(100% - 28px); margin: 0 14px 14px; border: 0; background: transparent; cursor: pointer; text-align: left; border-radius: 8px; }
+.operator:hover { background: rgba(255,255,255,.035); }
+.panel-drawer { position: fixed; right: 22px; top: 86px; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 112px); display: none; z-index: 21; border: 1px solid var(--line-bright); border-radius: 8px; background: linear-gradient(180deg, rgba(20,27,40,.98), rgba(12,17,26,.98)); box-shadow: 0 24px 80px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
+.panel-drawer.show { display: flex; flex-direction: column; }
+.panel-drawer .drawer-list { gap: 12px; }
+.drawer-card { border: 1px solid var(--line-soft); border-radius: 7px; padding: 14px; background: rgba(255,255,255,.035); color: var(--muted); font-size: 13px; line-height: 1.7; }
+.drawer-card strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 14px; }
 .history-drawer { position: fixed; right: 22px; top: 86px; width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 112px); display: none; z-index: 20; border: 1px solid var(--line-bright); border-radius: 8px; background: linear-gradient(180deg, rgba(20,27,40,.98), rgba(12,17,26,.98)); box-shadow: 0 24px 80px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
 .history-drawer.show { display: flex; flex-direction: column; }
 .drawer-head { height: 58px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line-soft); }
@@ -237,20 +246,20 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
 
   <aside class="sidebar">
     <nav class="nav">
-      <div class="nav-item active"><span class="nav-icon">▦</span>工作台</div>
-      <div class="nav-item"><span class="nav-icon">▧</span>素材库</div>
-      <div class="nav-item"><span class="nav-icon">♙</span>爆款库</div>
-      <div class="nav-item"><span class="nav-icon">◎</span>品牌库</div>
-      <div class="nav-item"><span class="nav-icon">▤</span>发布记录</div>
-      <div class="nav-item"><span class="nav-icon">⚙</span>设置</div>
+      <button class="nav-item active" type="button" data-nav="workbench"><span class="nav-icon">▦</span>工作台</button>
+      <button class="nav-item" type="button" data-nav="assets"><span class="nav-icon">▧</span>素材库</button>
+      <button class="nav-item" type="button" data-nav="viral"><span class="nav-icon">♙</span>爆款库</button>
+      <button class="nav-item" type="button" data-nav="brand"><span class="nav-icon">◎</span>品牌库</button>
+      <button class="nav-item" type="button" data-nav="records"><span class="nav-icon">▤</span>发布记录</button>
+      <button class="nav-item" type="button" data-nav="settings"><span class="nav-icon">⚙</span>设置</button>
     </nav>
     <div class="usage">
       <div class="usage-label">今日用量</div>
       <div class="bar"><span></span></div>
       <strong>38</strong><span class="usage-label"> / 200</span>
-      <button class="upgrade">♕ 升级套餐</button>
+      <button class="upgrade" id="upgradeBtn" type="button">升级套餐</button>
     </div>
-    <div class="operator"><span class="avatar"></span><span>运营小K</span><span style="margin-left:auto">⌄</span></div>
+    <button class="operator" id="operatorBtn" type="button"><span class="avatar"></span><span>运营小K</span><span style="margin-left:auto">⌄</span></button>
   </aside>
 
   <main class="main">
@@ -313,12 +322,13 @@ https://v.douyin.com/xxxxxxxxxxx"></textarea>
             <section class="tab-pane" id="scriptsPane" style="display:none"><div class="empty" id="scriptsEmpty"><div><strong>脚本会在这里生成</strong>完成爆款拆解后，生成 3 个原创版本。</div></div><div class="script-list" id="scriptsResult" style="display:none"></div></section>
             <section class="tab-pane" id="packagePane" style="display:none"><div class="empty" id="packageEmpty"><div><strong>发布包还没生成</strong>生成脚本后，再输出标题、封面文案、标签和执行清单。</div></div><div class="pkg-grid" id="packageResult" style="display:none"><div class="result-card"><h3>标题与封面 <button class="copy-btn" data-copy="titlesOutput">复制</button></h3><div class="output-text" id="titlesOutput"></div></div><div class="result-card"><h3>标签与评论区 <button class="copy-btn" data-copy="tagsOutput">复制</button></h3><div class="output-text" id="tagsOutput"></div></div><div class="result-card"><h3>拍摄执行清单 <button class="copy-btn" data-copy="shotOutput">复制</button></h3><div class="output-text" id="shotOutput"></div></div><div class="result-card"><h3>合规提醒 <button class="copy-btn" data-copy="riskOutput">复制</button></h3><div class="output-text" id="riskOutput"></div></div></div></section>
           </div>
-          <div class="stage-footer"><button class="btn" type="button">上一步</button><button class="btn primary" id="scriptBtn" type="button">生成仿写脚本 →</button><button class="btn" id="packageBtn" type="button">生成发布包</button></div>
+          <div class="stage-footer"><button class="btn" id="prevStepBtn" type="button">上一步</button><button class="btn primary" id="scriptBtn" type="button">生成仿写脚本 →</button><button class="btn" id="packageBtn" type="button">生成发布包</button></div>
         </div>
       </div>
     </section>
   </main>
 </div>
+<div class="panel-drawer" id="panelDrawer"><div class="drawer-head"><strong id="panelDrawerTitle">功能面板</strong><button class="copy-btn" id="closePanelBtn" type="button">关闭</button></div><div class="drawer-list" id="panelDrawerBody"></div></div>
 <div class="history-drawer" id="historyDrawer"><div class="drawer-head"><strong>历史记录</strong><button class="copy-btn" id="closeHistoryBtn" type="button">关闭</button></div><div class="drawer-list" id="historyList"></div></div>
 <div class="toast" id="toast"></div>
 
@@ -355,7 +365,7 @@ function setStatus(text, busy = false) {
 
 function setRunning(isRunning) {
   state.running = isRunning;
-  ['analyzeBtn','scriptBtn','packageBtn','sampleBtn','clearBtn','historyBtn','viralLibraryBtn','productLibraryBtn'].forEach(id => {
+  ['analyzeBtn','scriptBtn','packageBtn','sampleBtn','clearBtn','historyBtn','viralLibraryBtn','productLibraryBtn','upgradeBtn','operatorBtn','prevStepBtn'].forEach(id => {
     const el = $(id);
     if (el) el.disabled = isRunning;
   });
@@ -716,12 +726,58 @@ function clearAll() {
   toast('已新建任务');
 }
 
+function showPanel(title, html) {
+  $('panelDrawerTitle').textContent = title;
+  $('panelDrawerBody').innerHTML = html;
+  $('panelDrawer').classList.add('show');
+}
+
+function closePanel() { $('panelDrawer').classList.remove('show'); }
+
+function setActiveNav(name) {
+  document.querySelectorAll('[data-nav]').forEach(item => item.classList.toggle('active', item.dataset.nav === name));
+}
+
+function openRecords() {
+  renderHistory();
+  $('historyDrawer').classList.add('show');
+}
+
+function handleNav(name) {
+  setActiveNav(name);
+  if (name === 'workbench') { closePanel(); $('historyDrawer').classList.remove('show'); toast('已回到工作台'); return; }
+  if (name === 'assets') { showPanel('素材库', '<div class="drawer-card"><strong>参考资料入口已就绪</strong>当前版本支持在输入区保留素材位，视频、商品图、声音样本将在 V2 接入上传与解析。</div>'); return; }
+  if (name === 'viral') { fillViralPreset(); showPanel('爆款库', '<div class="drawer-card"><strong>已填入爆款库示例</strong>后续可接入抖音/小红书/视频号链接库，按行业、点赞、评论和发布时间筛选。</div>'); return; }
+  if (name === 'brand') { fillProductPreset(); showPanel('品牌库', '<div class="drawer-card"><strong>已填入产品事实示例</strong>后续可保存品牌语气、禁用词、产品卖点和素材授权信息。</div>'); return; }
+  if (name === 'records') { openRecords(); return; }
+  if (name === 'settings') { showPanel('设置', '<div class="drawer-card"><strong>当前配置</strong>模型通过 Vercel 环境变量 DS_KEY 调用；前端只访问 /api/chat，不暴露 Key。</div><div class="drawer-card"><strong>生成限制</strong>对标内容 4000 字，产品事实 3000 字，结果自动保存到本地历史。</div>'); return; }
+}
+
+function openUpgrade() {
+  showPanel('升级套餐', '<div class="drawer-card"><strong>当前用量：38 / 200</strong>套餐入口已预留，后续可接 Stripe/Creem/手动授权。</div><div class="drawer-card"><strong>可升级能力</strong>批量拆解、素材库上传、声音克隆、数字人生成、发布审核队列。</div>');
+}
+
+function openOperator() {
+  showPanel('账号信息', '<div class="drawer-card"><strong>运营小K</strong>本地演示账号，历史记录保存在当前浏览器。</div><div class="drawer-card"><strong>权限</strong>工作台、爆款库示例、产品库示例、发布包生成。</div>');
+}
+
+function goPreviousStep() {
+  if (state.activeTab === 'package') { switchTab('scripts'); setSteps(Math.max(2, state.stage - 1)); return; }
+  if (state.activeTab === 'scripts') { switchTab('analysis'); setSteps(Math.max(1, state.stage - 1)); return; }
+  toast('已经在第一步');
+}
+
 tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
 $('analyzeBtn').addEventListener('click', runAnalysis);
 $('scriptBtn').addEventListener('click', runScripts);
 $('packageBtn').addEventListener('click', runPackage);
 $('sampleBtn').addEventListener('click', fillSample);
 $('clearBtn').addEventListener('click', clearAll);
+document.querySelectorAll('[data-nav]').forEach(item => item.addEventListener('click', () => handleNav(item.dataset.nav)));
+$('upgradeBtn').addEventListener('click', openUpgrade);
+$('operatorBtn').addEventListener('click', openOperator);
+$('prevStepBtn').addEventListener('click', goPreviousStep);
+$('closePanelBtn').addEventListener('click', closePanel);
 $('historyBtn').addEventListener('click', () => { renderHistory(); $('historyDrawer').classList.toggle('show'); });
 $('closeHistoryBtn').addEventListener('click', () => $('historyDrawer').classList.remove('show'));
 $('viralLibraryBtn').addEventListener('click', fillViralPreset);
@@ -736,6 +792,7 @@ $('retryBtn').addEventListener('click', () => {
   if (state.lastAction === 'analysis') runAnalysis().catch(() => {});
   else if (state.lastAction === 'scripts') runScripts().catch(() => {});
   else if (state.lastAction === 'package') runPackage().catch(() => {});
+  else toast('暂无可重试的步骤');
 });
 document.addEventListener('click', (event) => {
   const id = event.target?.dataset?.copy;
