@@ -191,6 +191,18 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .loading { display: inline-block; width: 1.5px; height: 1em; background: var(--gold); margin-left: 2px; vertical-align: -2px; animation: blink .8s step-end infinite; }
 @keyframes blink { 50% { opacity: 0; } }
+
+.history-drawer { position: fixed; right: 22px; top: 86px; width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 112px); display: none; z-index: 20; border: 1px solid var(--line-bright); border-radius: 8px; background: linear-gradient(180deg, rgba(20,27,40,.98), rgba(12,17,26,.98)); box-shadow: 0 24px 80px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
+.history-drawer.show { display: flex; flex-direction: column; }
+.drawer-head { height: 58px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line-soft); }
+.drawer-head strong { font-size: 15px; }
+.drawer-list { padding: 12px; overflow: auto; display: grid; gap: 10px; }
+.history-item { text-align: left; border: 1px solid var(--line-soft); border-radius: 7px; background: rgba(255,255,255,.035); color: var(--text); padding: 12px; cursor: pointer; }
+.history-item:hover { border-color: rgba(242,200,107,.28); background: rgba(242,200,107,.055); }
+.history-item strong { display: block; font-size: 13px; margin-bottom: 5px; }
+.history-item span { display: block; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.history-empty { padding: 28px 14px; color: var(--dim); text-align: center; font-size: 13px; }
+@media (max-width: 720px) { .history-drawer { top: 74px; right: 12px; } }
 @media (max-width: 1180px) {
   body { overflow: auto; }
   .app { min-height: 100%; height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
@@ -219,7 +231,7 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
     <div class="top-actions">
       <button class="btn" id="clearBtn">↗ 新建任务</button>
       <span class="divider"></span>
-      <button class="btn" id="sampleBtn">填入示例</button><span class="divider"></span><button class="btn ghost" type="button">◷ 历史记录</button>
+      <button class="btn" id="sampleBtn">填入示例</button><span class="divider"></span><button class="btn ghost" id="historyBtn" type="button">历史记录</button>
     </div>
   </header>
 
@@ -255,7 +267,7 @@ textarea:focus, input:focus, select:focus { border-color: rgba(242,200,107,.68);
           <div class="panel-head"><div><h2>任务输入</h2><small>对标内容 + 产品事实</small></div><small id="saveState">未保存</small></div>
           <div class="input-scroll">
             <div class="field">
-              <div class="label-row"><label for="referenceInput">对标内容</label><button class="copy-btn" type="button">⊕ 从爆款库选择</button></div>
+              <div class="label-row"><label for="referenceInput">对标内容</label><button class="copy-btn" id="viralLibraryBtn" type="button">从爆款库选择</button></div>
               <textarea id="referenceInput" maxlength="4000" placeholder="粘贴视频链接或文案，支持抖音、视频号、小红书等链接
 
 https://v.douyin.com/xxxxxxxxxxx"></textarea>
@@ -263,7 +275,7 @@ https://v.douyin.com/xxxxxxxxxxx"></textarea>
             </div>
 
             <div class="field">
-              <div class="label-row"><label for="factsInput">产品事实</label><button class="copy-btn" type="button">⊕ 从产品库选择</button></div>
+              <div class="label-row"><label for="factsInput">产品事实</label><button class="copy-btn" id="productLibraryBtn" type="button">从产品库选择</button></div>
               <textarea id="factsInput" maxlength="3000" placeholder="请输入产品核心卖点、功能、使用场景、用户人群等，建议分点
 
 · 产品名称：Nilo 智能降噪耳机
@@ -307,6 +319,7 @@ https://v.douyin.com/xxxxxxxxxxx"></textarea>
     </section>
   </main>
 </div>
+<div class="history-drawer" id="historyDrawer"><div class="drawer-head"><strong>历史记录</strong><button class="copy-btn" id="closeHistoryBtn" type="button">关闭</button></div><div class="drawer-list" id="historyList"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -317,7 +330,8 @@ const state = {
   pkg: '',
   activeTab: 'analysis',
   running: false,
-  lastAction: null
+  lastAction: null,
+  stage: 1
 };
 
 const $ = (id) => document.getElementById(id);
@@ -341,8 +355,9 @@ function setStatus(text, busy = false) {
 
 function setRunning(isRunning) {
   state.running = isRunning;
-  ['analyzeBtn','scriptBtn','packageBtn','sampleBtn','clearBtn'].forEach(id => {
-    $(id).disabled = isRunning;
+  ['analyzeBtn','scriptBtn','packageBtn','sampleBtn','clearBtn','historyBtn','viralLibraryBtn','productLibraryBtn'].forEach(id => {
+    const el = $(id);
+    if (el) el.disabled = isRunning;
   });
 }
 
@@ -361,6 +376,7 @@ function updateCounts() {
   $('factsCount').textContent = `${$('factsInput').value.length}/3000`;
   $('saveState').textContent = '已自动保存';
   localStorage.setItem('nilo_viral_workbench_v1', JSON.stringify(getInput()));
+  updateMetrics();
 }
 
 function getInput() {
@@ -372,6 +388,60 @@ function getInput() {
     platform: $('platformSelect').value,
     goal: $('goalSelect').value
   };
+}
+
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('nilo_history_v1') || '[]'); }
+  catch (_) { return []; }
+}
+function setHistory(items) { localStorage.setItem('nilo_history_v1', JSON.stringify(items.slice(0, 20))); }
+function shortTitle(input) {
+  const parts = input.facts.split(/[\n：:]/).map(s => s.trim()).filter(Boolean);
+  return parts[1] || parts[0] || input.facts.slice(0, 22) || '未命名任务';
+}
+function saveHistory(stageName) {
+  const input = getInput();
+  if (!input.reference && !input.facts) return;
+  const item = { id: Date.now(), stageName, title: shortTitle(input), savedAt: new Date().toLocaleString('zh-CN', { hour12: false }), input, analysis: state.analysis, template: state.template, scripts: state.scripts, pkg: state.pkg, activeTab: state.activeTab, stage: state.stage };
+  setHistory([item].concat(getHistory().filter(x => x.title !== item.title || x.stageName !== item.stageName)));
+}
+function restoreHistory(item) {
+  $('referenceInput').value = item.input?.reference || '';
+  $('factsInput').value = item.input?.facts || '';
+  $('toneSelect').value = item.input?.tone || '理性干货型';
+  $('durationSelect').value = item.input?.duration || '60秒';
+  $('platformSelect').value = item.input?.platform || '抖音';
+  $('goalSelect').value = item.input?.goal || '引流获客';
+  state.analysis = item.analysis || '';
+  state.template = item.template || '';
+  state.scripts = item.scripts || '';
+  state.pkg = item.pkg || '';
+  state.stage = item.stage || 1;
+  renderRestoredResults(); updateCounts(); setSteps(state.stage); switchTab(item.activeTab || 'analysis');
+  $('historyDrawer').classList.remove('show'); toast('已恢复历史任务');
+}
+function renderHistory() {
+  const list = $('historyList'); const items = getHistory();
+  if (!items.length) { list.innerHTML = '<div class="history-empty">暂无历史记录。完成拆解或脚本后会自动保存。</div>'; return; }
+  list.innerHTML = items.map(item => '<button class="history-item" data-history-id="' + item.id + '"><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.stageName || '草稿') + ' · ' + escapeHtml(item.savedAt || '') + '</span></button>').join('');
+}
+function updateMetrics() {
+  const input = getInput(); const values = $('metricStrip').querySelectorAll('strong');
+  values[0].textContent = input.goal.includes('带货') ? '带货口播' : '口播种草';
+  values[1].textContent = input.duration;
+  values[2].textContent = state.analysis ? '已拆解' : '待拆解';
+  values[3].textContent = state.pkg ? '已生成' : '待检查';
+  values[4].textContent = input.platform;
+}
+function renderRestoredResults() {
+  if (state.analysis || state.template) { $('analysisEmpty').style.display = 'none'; $('analysisResult').style.display = 'grid'; $('analysisStructure').textContent = state.analysis; $('analysisTemplate').textContent = state.template; }
+  else { $('analysisEmpty').style.display = ''; $('analysisResult').style.display = 'none'; }
+  if (state.scripts) { $('scriptsEmpty').style.display = 'none'; $('scriptsResult').style.display = 'grid'; $('scriptsResult').innerHTML = splitScripts(state.scripts).map((part, idx) => '<div class="script-item"><div class="script-title">版本 ' + (idx + 1) + '</div><div class="output-text">' + escapeHtml(part) + '</div></div>').join(''); }
+  else { $('scriptsEmpty').style.display = ''; $('scriptsResult').style.display = 'none'; }
+  if (state.pkg) { $('packageEmpty').style.display = 'none'; $('packageResult').style.display = 'grid'; const p = parsePackage(state.pkg); $('titlesOutput').textContent = p.titles || state.pkg; $('tagsOutput').textContent = p.tags; $('shotOutput').textContent = p.shot; $('riskOutput').textContent = p.risk; }
+  else { $('packageEmpty').style.display = ''; $('packageResult').style.display = 'none'; }
+  updateMetrics();
 }
 
 function requireInput() {
@@ -390,11 +460,13 @@ function switchTab(name) {
 }
 
 function setSteps(done) {
+  state.stage = done;
   for (let i = 1; i <= 4; i++) {
     const el = $(`step${i}`);
     el.classList.toggle('done', i < done);
     el.classList.toggle('active', i === done);
   }
+  updateMetrics();
 }
 
 function parseTwoSections(text) {
@@ -521,6 +593,7 @@ async function runAnalysis(options = {}) {
     setSteps(2);
     setStatus('拆解完成');
     toast('爆款结构拆解完成');
+    saveHistory('爆款拆解');
   } catch (err) {
     setStatus('失败');
     showError(err.message || '拆解失败');
@@ -552,6 +625,7 @@ async function runScripts(options = {}) {
     setSteps(3);
     setStatus('脚本完成');
     toast('3 版原创口播脚本已生成');
+    saveHistory('仿写脚本');
   } catch (err) {
     setStatus('失败');
     showError(err.message || '脚本生成失败');
@@ -592,6 +666,7 @@ async function runPackage(options = {}) {
     setSteps(4);
     setStatus('发布包完成');
     toast('发布执行包已生成');
+    saveHistory('发布包');
   } catch (err) {
     setStatus('失败');
     showError(err.message || '发布包生成失败');
@@ -615,12 +690,11 @@ function activeText() {
   return $('packageResult').innerText;
 }
 
-function fillSample() {
-  $('referenceInput').value = '今天拆解了一个卖得不错的爆款口播案例。它表面上是一个简单工具，但其实背后是 5 个智能体串起来：先提取对标文案，再仿写，再克隆声音，然后生成数字人口播，最后自动加字幕和发布。普通用户不关心技术细节，只想一键得到结果，所以这个产品真正卖的是把复杂流程打包成可用工具。';
-  $('factsInput').value = '产品名称：Nilo 爆款口播工作台\n核心卖点：把对标视频拆成结构模板，再根据用户自己的产品事实生成原创口播脚本和发布执行包。\n目标用户：短视频运营、老板 IP、电商商家、知识付费团队。\n限制：不承诺保证爆款，不允许洗稿，不克隆未授权声音肖像。';
-  updateCounts();
-  toast('示例已填入');
-}
+const sampleReference = '今天拆解了一个卖得不错的爆款口播案例。它表面上是一个简单工具，但其实背后是 5 个智能体串起来：先提取对标文案，再仿写，再克隆声音，然后生成数字人口播，最后自动加字幕和发布。普通用户不关心技术细节，只想一键得到结果，所以这个产品真正卖的是把复杂流程打包成可用工具。';
+const sampleFacts = '产品名称：Nilo 爆款口播工作台\n核心卖点：把对标视频拆成结构模板，再根据用户自己的产品事实生成原创口播脚本和发布执行包。\n目标用户：短视频运营、老板 IP、电商商家、知识付费团队。\n限制：不承诺保证爆款，不允许洗稿，不克隆未授权声音肖像。';
+function fillSample() { $('referenceInput').value = sampleReference; $('factsInput').value = sampleFacts; updateCounts(); toast('示例已填入'); }
+function fillViralPreset() { $('referenceInput').value = sampleReference; updateCounts(); toast('已填入爆款库示例'); }
+function fillProductPreset() { $('factsInput').value = sampleFacts; updateCounts(); toast('已填入产品库示例'); }
 
 function clearAll() {
   ['referenceInput','factsInput'].forEach(id => $(id).value = '');
@@ -633,6 +707,8 @@ function clearAll() {
   $('packageResult').style.display = 'none';
   setSteps(1);
   setStatus('等待输入');
+  state.stage = 1;
+  $('historyDrawer').classList.remove('show');
   localStorage.removeItem('nilo_viral_workbench_v1');
   updateCounts();
   localStorage.removeItem('nilo_viral_workbench_v1');
@@ -646,6 +722,11 @@ $('scriptBtn').addEventListener('click', runScripts);
 $('packageBtn').addEventListener('click', runPackage);
 $('sampleBtn').addEventListener('click', fillSample);
 $('clearBtn').addEventListener('click', clearAll);
+$('historyBtn').addEventListener('click', () => { renderHistory(); $('historyDrawer').classList.toggle('show'); });
+$('closeHistoryBtn').addEventListener('click', () => $('historyDrawer').classList.remove('show'));
+$('viralLibraryBtn').addEventListener('click', fillViralPreset);
+$('productLibraryBtn').addEventListener('click', fillProductPreset);
+$('historyList').addEventListener('click', (event) => { const id = Number(event.target.closest('[data-history-id]')?.dataset?.historyId || 0); const item = getHistory().find(entry => entry.id === id); if (item) restoreHistory(item); });
 $('copyActiveBtn').addEventListener('click', () => {
   const text = activeText().trim();
   if (!text || text === '【结构拆解】\n\n【可迁移模板】') return toast('当前还没有生成结果');
@@ -660,7 +741,8 @@ document.addEventListener('click', (event) => {
   const id = event.target?.dataset?.copy;
   if (id) copyText($(id).textContent);
 });
-['referenceInput','factsInput','toneSelect','durationSelect','platformSelect','goalSelect'].forEach(id => $(id).addEventListener('input', updateCounts));
+['referenceInput','factsInput'].forEach(id => $(id).addEventListener('input', updateCounts));
+['toneSelect','durationSelect','platformSelect','goalSelect'].forEach(id => $(id).addEventListener('change', updateCounts));
 
 try {
   const saved = JSON.parse(localStorage.getItem('nilo_viral_workbench_v1') || '{}');
@@ -671,6 +753,7 @@ try {
   if (saved.platform) $('platformSelect').value = saved.platform;
   if (saved.goal) $('goalSelect').value = saved.goal;
 } catch (_) {}
+renderRestoredResults();
 updateCounts();
 </script>
 </body>
