@@ -1,7 +1,7 @@
 const { Readable } = require('node:stream');
 
 const DEFAULT_BASE_URL = 'https://api.deepseek.com';
-const DEFAULT_MODEL = 'deepseek-chat';
+const DEFAULT_MODEL = 'deepseek-v4-flash';
 const DEFAULT_MAX_INPUT_CHARS = 12000;
 const DEFAULT_MAX_OUTPUT_TOKENS = 2200;
 const DEFAULT_TIMEOUT_MS = 45000;
@@ -102,13 +102,23 @@ function normalizePayload(rawBody) {
   const requestedTemperature = Number(input.temperature ?? 0.65);
   const temperature = Math.min(Math.max(Number.isFinite(requestedTemperature) ? requestedTemperature : 0.65, 0), 1);
 
-  return JSON.stringify({
-    model: cleanEnv(process.env.DS_MODEL) || DEFAULT_MODEL,
+  const model = cleanEnv(process.env.DS_MODEL) || DEFAULT_MODEL;
+  const payload = {
+    model,
     messages,
     stream: Boolean(input.stream),
     max_tokens: maxTokens,
     temperature,
-  });
+  };
+
+  if (model === 'deepseek-v4-flash' && !input.thinking) {
+    payload.thinking = { type: 'disabled' };
+  }
+  if (input.thinking && typeof input.thinking === 'object') {
+    payload.thinking = input.thinking;
+  }
+
+  return JSON.stringify(payload);
 }
 
 function pipeWebStream(webStream, res) {
